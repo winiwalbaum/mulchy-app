@@ -1,0 +1,7 @@
+project_id = "izefoysghziekvhggeeq"
+
+[functions.get-weather]
+verify_jwt = false
+
+[functions.identify-pest]
+verify_jwt = false

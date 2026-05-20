@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
+import FeedPage from "./pages/FeedPage";
 import BibliotecaPage from "./pages/BibliotecaPage";
 import SemilleroPage from "./pages/SemilleroPage";
 
@@ -34,7 +35,7 @@ const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const showBottomNavRoutes = ["/dashboard", "/semillero", "/biblioteca", "/bitacora", "/comunidad", "/perfil", "/plagas"];
+const showBottomNavRoutes = ["/dashboard", "/tareas", "/semillero", "/biblioteca", "/bitacora", "/comunidad", "/perfil", "/plagas"];
 
 const AppLayout = () => {
   const location = useLocation();
@@ -67,6 +68,10 @@ const AppRoutes = () => {
       />
       <Route
         path="/dashboard"
+        element={<ProtectedRoute><OnboardingGuard><FeedPage /></OnboardingGuard></ProtectedRoute>}
+      />
+      <Route
+        path="/tareas"
         element={<ProtectedRoute><OnboardingGuard><DashboardPage /></OnboardingGuard></ProtectedRoute>}
       />
       <Route

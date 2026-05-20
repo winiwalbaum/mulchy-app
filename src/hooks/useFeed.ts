@@ -51,8 +51,7 @@ async function fetchNativePlant(lat?: number | null, lng?: number | null): Promi
       .from("native_plants_cache")
       .select("taxon_id, common_name, common_name_en, scientific_name, category, image_url")
       .not("image_url", "is", null)
-      .order("observation_count", { ascending: false })
-      .limit(20);
+      .limit(200); // pool amplio para máxima variedad en el random
     return data && data.length > 0 ? data[Math.floor(Math.random() * data.length)] : null;
   };
 

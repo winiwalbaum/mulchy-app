@@ -954,6 +954,7 @@ const SemilleroPage = () => {
   const [nativeDesc, setNativeDesc] = useState<string | null>(null);
   const [nativeDescLoading, setNativeDescLoading] = useState(false);
   const [autoOpenDone, setAutoOpenDone] = useState(false);
+  const featuredTaxonId: number | null = navState.openPlant ?? null;
 
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Huertero/a";
 
@@ -1023,16 +1024,13 @@ const SemilleroPage = () => {
     setNativeDescLoading(false);
   };
 
-  // Auto-open native plant when navigating from the feed card
+  // Marca la planta del feed como "vista" (sin auto-abrir diálogo — se muestra como hero card)
   useEffect(() => {
-    if (autoOpenDone || !navState.openPlant || nativePlants.length === 0) return;
-    const plant = nativePlants.find((p) => p.taxon_id === navState.openPlant);
-    if (plant) {
-      setAutoOpenDone(true);
-      handleSelectNative(plant);
-    }
+    if (autoOpenDone || !featuredTaxonId || nativePlants.length === 0) return;
+    const plant = nativePlants.find((p) => p.taxon_id === featuredTaxonId);
+    if (plant) setAutoOpenDone(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navState.openPlant, nativePlants, autoOpenDone]);
+  }, [featuredTaxonId, nativePlants, autoOpenDone]);
 
   const toggleExpand = (name: string) =>
     setExpandedName((prev) => (prev === name ? null : name));
@@ -1058,7 +1056,11 @@ const SemilleroPage = () => {
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={lang === "en" ? "Search plants..." : "Buscar plantas..."}
+            placeholder={
+              activeTab === "native"
+                ? (lang === "en" ? "Search native plants..." : "Buscar plantas nativas...")
+                : (lang === "en" ? "Search plants..." : "Buscar plantas...")
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 font-body"
@@ -1179,6 +1181,49 @@ const SemilleroPage = () => {
               </div>
             ) : (
               <>
+                {/* ── Planta del día (viene del feed) ── */}
+                {featuredTaxonId && (() => {
+                  const fp = nativePlants.find((p) => p.taxon_id === featuredTaxonId);
+                  if (!fp) return null;
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-5 rounded-2xl overflow-hidden relative cursor-pointer"
+                      style={{ height: "200px" }}
+                      onClick={() => handleSelectNative(fp)}
+                    >
+                      {fp.image_url ? (
+                        <img
+                          src={fp.image_url}
+                          alt={getNativeName(fp)}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-green-50 flex items-center justify-center">
+                          <span className="text-7xl opacity-30">{categoryEmoji[fp.category] || "🌿"}</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-body font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-700/90 text-white">
+                          <TreePine className="w-2.5 h-2.5" />
+                          {lang === "en" ? "Today's native plant" : "Planta nativa de hoy"}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="font-display font-bold text-white text-lg leading-tight capitalize">
+                          {getNativeName(fp)}
+                        </h3>
+                        <p className="font-body text-white/70 text-xs italic mt-0.5">{fp.scientific_name}</p>
+                        <p className="font-body text-white/60 text-[10px] mt-1.5 uppercase tracking-wider">
+                          {lang === "en" ? "Tap to discover →" : "Toca para descubrir →"}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+
                 <div className="flex flex-wrap gap-2 mb-4">
                   <button
                     onClick={() => setNativeCategory("all")}

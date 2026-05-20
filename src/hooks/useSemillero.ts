@@ -214,6 +214,34 @@ export const uploadVarietyPhoto = async (
   }
 };
 
+export const updateVariety = async (
+  id: string,
+  updates: {
+    name?: string;
+    color?: string;
+    shape?: string;
+    size_weight?: string;
+    difficulty?: string;
+    personal_experience?: string;
+    seed_origin?: string;
+    location?: string;
+    years_cultivated?: number;
+    image_url?: string;
+    image_url_2?: string;
+    image_url_3?: string;
+    tags?: string[];
+    description?: string;
+  }
+) => {
+  const { data, error } = await (supabase as any)
+    .from("plant_varieties")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  return { data, error };
+};
+
 export const insertVariety = async (variety: {
   plant_scientific_name: string;
   name: string;

@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, ChevronRight, Star, Leaf,
-  Sprout, Users, X, Check, Loader2, Calendar, ArrowLeft, MapPin, ExternalLink, TreePine, Camera,
+  Sprout, Users, X, Check, Loader2, Calendar, ArrowLeft, MapPin, ExternalLink, TreePine, Camera, Pencil,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import { plantExtra, formatMonths } from "@/data/plantExtra";
 import { useNativePlants, categoryEmoji, categoryLabels, type NativePlant } from "@/hooks/useNativePlants";
 import {
   useVarieties, useVarietyGrows, useMyGrow, useMyRating,
-  upsertGrow, insertVariety, upsertRating, uploadVarietyPhoto,
+  upsertGrow, insertVariety, updateVariety, upsertRating, uploadVarietyPhoto,
   statusEmoji, statusLabel,
   type Variety,
 } from "@/hooks/useSemillero";
@@ -507,6 +507,166 @@ const RatingWidget = ({
   );
 };
 
+// ─── Edit Variety Form ────────────────────────────────────────────────────────
+const EditVarietyForm = ({
+  variety, userId, lang, onClose, onSaved,
+}: {
+  variety: Variety; userId: string; lang: string;
+  onClose: () => void; onSaved: (updated: Variety) => void;
+}) => {
+  const [name, setName] = useState(variety.name);
+  const [color, setColor] = useState(variety.color || "");
+  const [shape, setShape] = useState(variety.shape || "");
+  const [sizeWeight, setSizeWeight] = useState(variety.size_weight || "");
+  const [difficulty, setDifficulty] = useState(variety.difficulty || "");
+  const [personalExperience, setPersonalExperience] = useState(variety.personal_experience || "");
+  const [photos, setPhotos] = useState<(File | null)[]>([null, null, null]);
+  const [previews, setPreviews] = useState<(string | null)[]>([
+    variety.image_url || null,
+    variety.image_url_2 || null,
+    variety.image_url_3 || null,
+  ]);
+  const [saving, setSaving] = useState(false);
+
+  const photoRef1 = useRef<HTMLInputElement>(null);
+  const photoRef2 = useRef<HTMLInputElement>(null);
+  const photoRef3 = useRef<HTMLInputElement>(null);
+  const photoRefs = [photoRef1, photoRef2, photoRef3];
+
+  const handlePhotoChange = (i: number, file: File) => {
+    setPhotos((prev) => { const n = [...prev]; n[i] = file; return n; });
+    setPreviews((prev) => { const n = [...prev]; n[i] = URL.createObjectURL(file); return n; });
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+
+    const urls: (string | null)[] = [
+      variety.image_url || null,
+      variety.image_url_2 || null,
+      variety.image_url_3 || null,
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      if (photos[i]) {
+        const url = await uploadVarietyPhoto(photos[i]!, userId, (i + 1) as 1 | 2 | 3);
+        if (url) urls[i] = url;
+        else toast.error(lang === "en" ? `Photo ${i + 1} failed to upload` : `Error subiendo foto ${i + 1}`);
+      }
+    }
+
+    const { data, error } = await updateVariety(variety.id, {
+      name: name.trim(),
+      color: color || undefined,
+      shape: shape || undefined,
+      size_weight: sizeWeight || undefined,
+      difficulty: difficulty || undefined,
+      personal_experience: personalExperience || undefined,
+      image_url: urls[0] || undefined,
+      image_url_2: urls[1] || undefined,
+      image_url_3: urls[2] || undefined,
+    });
+
+    setSaving(false);
+    if (error) {
+      console.error("updateVariety error:", error);
+      toast.error(lang === "en" ? "Error saving" : "Error al guardar");
+      return;
+    }
+    toast.success(lang === "en" ? "Updated!" : "¡Actualizada!");
+    onSaved(data);
+    onClose();
+  };
+
+  const slots = [
+    { ref: photoRef1, label: lang === "en" ? "On the plant" : "En la mata" },
+    { ref: photoRef2, label: lang === "en" ? "In hand" : "En la mano" },
+    { ref: photoRef3, label: lang === "en" ? "Cross-section" : "Al corte" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Fotos */}
+      <div>
+        <Label className="font-body text-sm mb-2 block">{lang === "en" ? "Photos" : "Fotos"}</Label>
+        <div className="grid grid-cols-3 gap-2">
+          {slots.map(({ ref, label }, i) => (
+            <div
+              key={i}
+              onClick={() => ref.current?.click()}
+              className="aspect-square rounded-xl border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center cursor-pointer hover:border-primary/60 transition-colors overflow-hidden"
+            >
+              <input ref={ref} type="file" accept="image/*" className="sr-only"
+                onChange={(e) => e.target.files?.[0] && handlePhotoChange(i, e.target.files[0])} />
+              {previews[i] ? (
+                <img src={previews[i]!} className="w-full h-full object-cover" alt={label} />
+              ) : (
+                <div className="flex flex-col items-center gap-1 p-2 text-center">
+                  <Camera className="w-5 h-5 text-muted-foreground" />
+                  <p className="text-[10px] font-body text-muted-foreground">{label}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Nombre */}
+      <div>
+        <Label className="font-body text-sm">{lang === "en" ? "Variety name *" : "Nombre *"}</Label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 font-body" />
+      </div>
+
+      {/* Color + Forma */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="font-body text-sm">{lang === "en" ? "Color" : "Color"}</Label>
+          <Input value={color} onChange={(e) => setColor(e.target.value)} className="mt-1 font-body" />
+        </div>
+        <div>
+          <Label className="font-body text-sm">{lang === "en" ? "Shape" : "Forma"}</Label>
+          <Input value={shape} onChange={(e) => setShape(e.target.value)} className="mt-1 font-body" />
+        </div>
+      </div>
+
+      {/* Tamaño + Dificultad */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="font-body text-sm">{lang === "en" ? "Size/Weight" : "Tamaño/Peso"}</Label>
+          <Input value={sizeWeight} onChange={(e) => setSizeWeight(e.target.value)} className="mt-1 font-body" />
+        </div>
+        <div>
+          <Label className="font-body text-sm mb-2 block">{lang === "en" ? "Difficulty" : "Dificultad"}</Label>
+          <div className="flex gap-1 mt-1">
+            {[{ value: "Fácil", emoji: "🟢" }, { value: "Media", emoji: "🟡" }, { value: "Avanzada", emoji: "🔴" }].map(({ value, emoji }) => (
+              <button key={value} onClick={() => setDifficulty(difficulty === value ? "" : value)}
+                className={`flex-1 py-1 rounded-lg text-xs font-body border transition-colors ${difficulty === value ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Experiencia */}
+      <div>
+        <Label className="font-body text-sm">{lang === "en" ? "Personal experience" : "Experiencia personal"}</Label>
+        <Textarea value={personalExperience} onChange={(e) => setPersonalExperience(e.target.value)}
+          className="mt-1 font-body resize-none" rows={3} />
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <Button variant="outline" className="flex-1 font-body" onClick={onClose}>{lang === "en" ? "Cancel" : "Cancelar"}</Button>
+        <Button variant="hero" className="flex-1 font-body" onClick={handleSave} disabled={saving || !name.trim()}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+          {lang === "en" ? "Save" : "Guardar"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Variety Detail Panel ─────────────────────────────────────────────────────
 const VarietyDetail = ({
   variety, plant, userId, displayName, lang, onClose,
@@ -516,10 +676,13 @@ const VarietyDetail = ({
 }) => {
   const { grows, loading } = useVarietyGrows(variety.id);
   const [showGrowForm, setShowGrowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [currentVariety, setCurrentVariety] = useState(variety);
   const [growsKey, setGrowsKey] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
 
-  const photos = [variety.image_url, variety.image_url_2, variety.image_url_3].filter(Boolean) as string[];
+  const isOwner = userId === currentVariety.created_by;
+  const photos = [currentVariety.image_url, currentVariety.image_url_2, currentVariety.image_url_3].filter(Boolean) as string[];
 
   const detailRows = [
     { key: "color",    label: { es: "Color", en: "Color" },             value: variety.color },
@@ -554,26 +717,37 @@ const VarietyDetail = ({
       <div className="flex items-start gap-3">
         <span className="text-4xl">{plant.emoji}</span>
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-display font-bold">{variety.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-display font-bold flex-1">{currentVariety.name}</h2>
+            {isOwner && (
+              <button
+                onClick={() => setShowEditForm(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-body text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors border border-transparent hover:border-primary/20"
+              >
+                <Pencil className="w-3 h-3" />
+                {lang === "en" ? "Edit" : "Editar"}
+              </button>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground font-body italic">
             {lang === "en" ? plant.name_en : plant.name} · {plant.scientificName}
           </p>
-          {variety.info_ratings_count > 0 && (
+          {currentVariety.info_ratings_count > 0 && (
             <div className="flex items-center gap-1 mt-1">
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
               <span className="text-xs font-body text-muted-foreground">
-                {variety.info_score.toFixed(1)} · {variety.info_ratings_count} {lang === "en" ? "ratings" : "valoraciones"}
+                {currentVariety.info_score.toFixed(1)} · {currentVariety.info_ratings_count} {lang === "en" ? "ratings" : "valoraciones"}
               </span>
             </div>
           )}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {variety.origin && <Badge variant="secondary" className="text-xs font-body">{variety.origin}</Badge>}
-            {variety.days_to_harvest && (
+            {currentVariety.origin && <Badge variant="secondary" className="text-xs font-body">{currentVariety.origin}</Badge>}
+            {currentVariety.days_to_harvest && (
               <Badge variant="outline" className="text-xs font-body gap-1">
-                <Calendar className="w-3 h-3" />{variety.days_to_harvest}d
+                <Calendar className="w-3 h-3" />{currentVariety.days_to_harvest}d
               </Badge>
             )}
-            {variety.tags?.map((tag) => (
+            {currentVariety.tags?.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs font-body">{tag}</Badge>
             ))}
           </div>
@@ -595,19 +769,42 @@ const VarietyDetail = ({
       )}
 
       {/* Personal experience */}
-      {variety.personal_experience && (
+      {currentVariety.personal_experience && (
         <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
             {lang === "en" ? "Personal experience" : "Experiencia personal"}
           </p>
           <p className="text-sm font-body leading-relaxed text-foreground italic">
-            &ldquo;{variety.personal_experience}&rdquo;
+            &ldquo;{currentVariety.personal_experience}&rdquo;
           </p>
         </div>
       )}
 
-      {variety.description && (
-        <p className="text-sm text-muted-foreground font-body leading-relaxed bg-muted/40 rounded-lg p-3">{variety.description}</p>
+      {currentVariety.description && (
+        <p className="text-sm text-muted-foreground font-body leading-relaxed bg-muted/40 rounded-lg p-3">{currentVariety.description}</p>
+      )}
+
+      {/* Diálogo de edición (solo para el creador) */}
+      {isOwner && showEditForm && (
+        <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display">
+                {lang === "en" ? "Edit variety" : "Editar variedad"}
+              </DialogTitle>
+            </DialogHeader>
+            <EditVarietyForm
+              variety={currentVariety}
+              userId={userId!}
+              lang={lang}
+              onClose={() => setShowEditForm(false)}
+              onSaved={(updated) => {
+                setCurrentVariety((prev) => ({ ...prev, ...updated }));
+                setPhotoIndex(0);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* My grow CTA */}

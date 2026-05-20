@@ -1005,15 +1005,24 @@ const FichaTecnica = ({ plant, lang }: { plant: Plant; lang: string }) => {
 
 // ─── Plant Card ────────────────────────────────────────────────────────────────
 const PlantCard = ({
-  plant, isExpanded, onToggle, lang, userId, displayName,
+  plant, isExpanded, onToggle, lang, userId, displayName, autoOpenVarietyId,
 }: {
   plant: Plant; isExpanded: boolean; onToggle: () => void;
   lang: string; userId: string | null; displayName: string;
+  autoOpenVarietyId?: string | null;
 }) => {
   const { varieties, loading, refetch } = useVarieties(isExpanded ? plant.scientificName : null);
   const [selectedVariety, setSelectedVariety] = useState<Variety | null>(null);
   const [showAddVariety, setShowAddVariety] = useState(false);
   const displayPlantName = lang === "en" ? plant.name_en : plant.name;
+
+  // Auto-abrir la variedad específica cuando llega desde el feed
+  useEffect(() => {
+    if (!autoOpenVarietyId || varieties.length === 0 || selectedVariety) return;
+    const v = varieties.find((v) => v.id === autoOpenVarietyId);
+    if (v) setSelectedVariety(v);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenVarietyId, varieties]);
 
   return (
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
@@ -1144,6 +1153,11 @@ const SemilleroPage = () => {
   const [expandedName, setExpandedName] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(navState.tab || "catalog");
 
+  // Variedad a auto-abrir desde el feed
+  const targetVarietyId: string | null = navState.openVariety ?? null;
+  const targetPlantName: string | null = navState.plantName ?? null;
+  const [catalogAutoOpenDone, setCatalogAutoOpenDone] = useState(false);
+
   // Native plants state
   const { plants: nativePlants, loading: nativeLoading, error: nativeError, fetchDescription } = useNativePlants();
   const [nativeCategory, setNativeCategory] = useState<string>("all");
@@ -1220,6 +1234,14 @@ const SemilleroPage = () => {
     setNativeDesc(lang === "en" ? result.description_en : result.description);
     setNativeDescLoading(false);
   };
+
+  // Auto-expandir la planta del catálogo cuando viene desde el feed
+  useEffect(() => {
+    if (catalogAutoOpenDone || !targetPlantName) return;
+    setExpandedName(targetPlantName);
+    setCatalogAutoOpenDone(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetPlantName]);
 
   // Marca la planta del feed como "vista" (sin auto-abrir diálogo — se muestra como hero card)
   useEffect(() => {
@@ -1324,6 +1346,9 @@ const SemilleroPage = () => {
                     lang={lang}
                     userId={user?.id ?? null}
                     displayName={displayName}
+                    autoOpenVarietyId={
+                      targetPlantName === plant.scientificName ? targetVarietyId : null
+                    }
                   />
                 </motion.div>
               ))}

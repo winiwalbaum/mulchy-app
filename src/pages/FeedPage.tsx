@@ -164,6 +164,7 @@ const FeedPage = () => {
             {latestVariety ? (
               <MagCard
                 to="/semillero"
+                state={{ openVariety: latestVariety.id, plantName: latestVariety.plant_scientific_name }}
                 image={latestVariety.image_url}
                 bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
                 emojiBg="🌱"

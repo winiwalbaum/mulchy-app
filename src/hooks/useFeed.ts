@@ -109,7 +109,7 @@ export const useFeed = () => {
         await Promise.allSettled([
           // Última variedad registrada
           supabase
-            .from("varieties")
+            .from("plant_varieties")
             .select("id, name, plant_scientific_name, image_url, description, created_at")
             .order("created_at", { ascending: false })
             .limit(1)
@@ -129,7 +129,7 @@ export const useFeed = () => {
             .maybeSingle(),
           // Mi foto más reciente de variedad (fallback)
           supabase
-            .from("varieties")
+            .from("plant_varieties")
             .select("image_url")
             .eq("created_by", user.id)
             .not("image_url", "is", null)

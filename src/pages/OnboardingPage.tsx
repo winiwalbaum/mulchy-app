@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import LocationPicker from "@/components/LocationPicker";
 
 const OnboardingPage = () => {
   const { user } = useAuth();
+  const { refetch: refetchProfile } = useProfile();
   const { t, lang, setLang } = useLanguage();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -87,6 +89,7 @@ const OnboardingPage = () => {
 
       if (profileError) throw profileError;
 
+      await refetchProfile();
       toast.success(ob.gardenReady as string);
       navigate("/");
     } catch (error: any) {

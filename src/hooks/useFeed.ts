@@ -62,7 +62,7 @@ export const useFeed = () => {
           .maybeSingle(),
         // Planta nativa con imagen (top observadas)
         supabase
-          .from("native_plants")
+          .from("native_plants_cache")
           .select("common_name, common_name_en, scientific_name, category, image_url")
           .not("image_url", "is", null)
           .order("observation_count", { ascending: false })

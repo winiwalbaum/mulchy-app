@@ -29,6 +29,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Enforce invite code for new Google OAuth users
+        if (session?.user && session.user.app_metadata?.provider === "google") {
+          const createdAt = new Date(session.user.created_at);
+          const isNewUser = Date.now() - createdAt.getTime() < 120_000; // 2 min window
+          if (isNewUser) {
+            const pendingCodeId = localStorage.getItem("pendingInviteCode");
+            localStorage.removeItem("pendingInviteCode");
+            if (pendingCodeId) {
+              // Claim the validated invite code
+              supabase
+                .from("invite_codes")
+                .update({ used_by: session.user.id, used_at: new Date().toISOString() })
+                .eq("id", pendingCodeId)
+                .then(() => {});
+            } else {
+              // New Google user with no invite code — revoke access
+              setTimeout(() => supabase.auth.signOut(), 100);
+            }
+          } else {
+            // Returning user — clear any stale pending code
+            localStorage.removeItem("pendingInviteCode");
+          }
+        }
       }
     );
 

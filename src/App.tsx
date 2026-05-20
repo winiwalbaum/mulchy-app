@@ -16,6 +16,7 @@ import BibliotecaPage from "./pages/BibliotecaPage";
 import SemilleroPage from "./pages/SemilleroPage";
 
 import BitacoraPage from "./pages/BitacoraPage";
+import VariedadesPage from "./pages/VariedadesPage";
 import ProfilePage from "./pages/ProfilePage";
 import CommunityPage from "./pages/CommunityPage";
 import PestScannerPage from "./pages/PestScannerPage";
@@ -81,6 +82,10 @@ const AppRoutes = () => {
       <Route
         path="/biblioteca"
         element={<ProtectedRoute><OnboardingGuard><BibliotecaPage /></OnboardingGuard></ProtectedRoute>}
+      />
+      <Route
+        path="/variedades"
+        element={<ProtectedRoute><OnboardingGuard><VariedadesPage /></OnboardingGuard></ProtectedRoute>}
       />
       <Route
         path="/bitacora"

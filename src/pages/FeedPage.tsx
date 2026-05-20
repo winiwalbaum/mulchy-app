@@ -115,7 +115,7 @@ const MagCard = ({
 const FeedPage = () => {
   const { profile } = useProfile();
   const { lang } = useLanguage();
-  const { latestVariety, popularPhoto, popularRecipe, seasonTask, nativePlant, loading } =
+  const { latestVariety, popularPhoto, popularRecipe, seasonTask, nativePlant, myPhoto, loading } =
     useFeed();
 
   const dateLocale = lang === "en" ? enUS : esLocale;
@@ -190,6 +190,7 @@ const FeedPage = () => {
             {/* 2 — Tu huerto */}
             <MagCard
               to="/bitacora"
+              image={myPhoto}
               bgClass="bg-gradient-to-br from-secondary/80 to-muted"
               emojiBg="🏡"
               categoryLabel={es("Tu huerto", "Your garden")}

@@ -1,10 +1,10 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, ChevronRight, Star, Leaf,
   Sprout, Users, X, Check, Loader2, Calendar, ArrowLeft, MapPin, ExternalLink, TreePine, Camera,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -939,9 +939,13 @@ const SemilleroPage = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { lang } = useLanguage();
+  const location = useLocation();
+  const navState = (location.state as any) || {};
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<PlantCategory | "all">("all");
   const [expandedName, setExpandedName] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(navState.tab || "catalog");
 
   // Native plants state
   const { plants: nativePlants, loading: nativeLoading, error: nativeError, fetchDescription } = useNativePlants();
@@ -949,6 +953,7 @@ const SemilleroPage = () => {
   const [selectedNative, setSelectedNative] = useState<NativePlant | null>(null);
   const [nativeDesc, setNativeDesc] = useState<string | null>(null);
   const [nativeDescLoading, setNativeDescLoading] = useState(false);
+  const [autoOpenDone, setAutoOpenDone] = useState(false);
 
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Huertero/a";
 
@@ -1018,6 +1023,17 @@ const SemilleroPage = () => {
     setNativeDescLoading(false);
   };
 
+  // Auto-open native plant when navigating from the feed card
+  useEffect(() => {
+    if (autoOpenDone || !navState.openPlant || nativePlants.length === 0) return;
+    const plant = nativePlants.find((p) => p.taxon_id === navState.openPlant);
+    if (plant) {
+      setAutoOpenDone(true);
+      handleSelectNative(plant);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navState.openPlant, nativePlants, autoOpenDone]);
+
   const toggleExpand = (name: string) =>
     setExpandedName((prev) => (prev === name ? null : name));
 
@@ -1049,7 +1065,7 @@ const SemilleroPage = () => {
           />
         </div>
 
-        <Tabs defaultValue="catalog">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full grid grid-cols-2 mb-4">
             <TabsTrigger value="catalog" className="font-body">
               <Leaf className="w-4 h-4 mr-2" />

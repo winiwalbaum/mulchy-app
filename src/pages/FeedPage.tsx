@@ -24,6 +24,7 @@ const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
 
 interface CardProps {
   to: string;
+  state?: Record<string, any>;
   image?: string | null;
   bgClass: string;
   emojiBg?: string;
@@ -37,6 +38,7 @@ interface CardProps {
 
 const MagCard = ({
   to,
+  state,
   image,
   bgClass,
   emojiBg,
@@ -54,7 +56,7 @@ const MagCard = ({
     className="rounded-2xl overflow-hidden relative"
     style={{ height: "172px" }}
   >
-    <Link to={to} className="absolute inset-0 block group">
+    <Link to={to} state={state} className="absolute inset-0 block group">
       {/* Background */}
       {image ? (
         <img
@@ -286,6 +288,7 @@ const FeedPage = () => {
             {nativePlant ? (
               <MagCard
                 to="/semillero"
+                state={{ tab: "native", openPlant: nativePlant.taxon_id }}
                 image={nativePlant.image_url}
                 bgClass="bg-gradient-to-br from-emerald-100 to-green-50"
                 emojiBg={categoryEmoji[nativePlant.category] || "🌿"}
@@ -297,12 +300,13 @@ const FeedPage = () => {
                     ? nativePlant.common_name_en || nativePlant.common_name || nativePlant.scientific_name
                     : nativePlant.common_name || nativePlant.scientific_name
                 }
-                subtitle={nativePlant.scientific_name}
+                subtitle={es("Descubrir →", "Discover →")}
                 delay={0.3}
               />
             ) : (
               <MagCard
                 to="/semillero"
+                state={{ tab: "native" }}
                 bgClass="bg-gradient-to-br from-emerald-100 to-green-50"
                 emojiBg="🌳"
                 categoryLabel={es("Planta nativa", "Native plant")}

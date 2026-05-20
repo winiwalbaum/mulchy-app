@@ -1235,13 +1235,15 @@ const SemilleroPage = () => {
     setNativeDescLoading(false);
   };
 
-  // Auto-expandir la planta del catálogo cuando viene desde el feed
+  // Auto-expandir la planta del catálogo cuando viene desde el feed o desde VariedadesPage
   useEffect(() => {
-    if (catalogAutoOpenDone || !targetPlantName) return;
-    setExpandedName(targetPlantName);
+    if (catalogAutoOpenDone) return;
+    const plantToExpand = targetPlantName || navState.expandPlant || null;
+    if (!plantToExpand) return;
+    setExpandedName(plantToExpand);
     setCatalogAutoOpenDone(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetPlantName]);
+  }, [targetPlantName, navState.expandPlant]);
 
   // Marca la planta del feed como "vista" (sin auto-abrir diálogo — se muestra como hero card)
   useEffect(() => {

@@ -1,12 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sprout } from "lucide-react";
+import { ArrowLeft, Loader2, Sprout, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { plants } from "@/data/plants";
+import { plants, type PlantCategory } from "@/data/plants";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const CATALOG_CATEGORIES: { value: PlantCategory | "all"; label: { es: string; en: string } }[] = [
+  { value: "all",          label: { es: "Todas",       en: "All" } },
+  { value: "hortalizas",   label: { es: "Hortalizas",  en: "Vegetables" } },
+  { value: "aromáticas",   label: { es: "Aromáticas",  en: "Herbs" } },
+  { value: "frutales",     label: { es: "Frutales",    en: "Fruit" } },
+  { value: "flores",       label: { es: "Flores",      en: "Flowers" } },
+  { value: "medicinales",  label: { es: "Medicinales", en: "Medicinal" } },
+  { value: "ornamentales", label: { es: "Ornamentales",en: "Ornamental" } },
+  { value: "arbustos",     label: { es: "Arbustos",    en: "Shrubs" } },
+  { value: "bulbos",       label: { es: "Bulbos",      en: "Bulbs" } },
+  { value: "trepadoras",   label: { es: "Trepadoras",  en: "Climbers" } },
+  { value: "interior",     label: { es: "Interior",    en: "Indoor" } },
+];
 
 interface VarietyCard {
   id: string;
@@ -44,7 +58,23 @@ const VariedadesPage = () => {
   const [selected, setSelected] = useState<VarietyCard | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
 
+  const [catalogCategory, setCatalogCategory] = useState<PlantCategory | "all">("all");
+  const [catalogSearch, setCatalogSearch] = useState("");
+
   const es = (spa: string, en: string) => (lang === "en" ? en : spa);
+
+  const filteredPlants = useMemo(() => {
+    const q = catalogSearch.toLowerCase().trim();
+    return plants.filter((p) => {
+      if (catalogCategory !== "all" && p.category !== catalogCategory) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.name_en.toLowerCase().includes(q) ||
+        p.scientificName.toLowerCase().includes(q)
+      );
+    });
+  }, [catalogCategory, catalogSearch]);
 
   useEffect(() => {
     const fetchVarieties = async () => {
@@ -181,6 +211,77 @@ const VariedadesPage = () => {
             })}
           </div>
         )}
+      {/* ── Catálogo de plantas ────────────────────────────── */}
+      <div className="px-4 pb-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2 mt-8 mb-4">
+          <div className="flex-1 h-px bg-border" />
+          <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-widest shrink-0">
+            {es("Explorar por planta", "Browse by plant")}
+          </h2>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        {/* Buscador */}
+        <div className="relative mb-4">
+          <Sprout className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            value={catalogSearch}
+            onChange={(e) => setCatalogSearch(e.target.value)}
+            placeholder={es("Buscar plantas...", "Search plants...")}
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-border bg-card font-body text-sm focus:outline-none focus:border-primary transition-colors"
+          />
+        </div>
+
+        {/* Categorías */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+          {CATALOG_CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setCatalogCategory(c.value)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors border ${
+                catalogCategory === c.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card border-border text-muted-foreground hover:border-primary"
+              }`}
+            >
+              {lang === "en" ? c.label.en : c.label.es}
+            </button>
+          ))}
+        </div>
+
+        {/* Lista de plantas */}
+        <div className="space-y-2">
+          {filteredPlants.map((plant, i) => (
+            <motion.div
+              key={plant.scientificName}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: Math.min(i * 0.02, 0.3) }}
+            >
+              <Link
+                to="/semillero"
+                state={{ expandPlant: plant.scientificName }}
+                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:bg-muted/30 transition-colors"
+              >
+                <span className="text-2xl w-8 shrink-0">{plant.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-body font-medium text-sm">
+                    {lang === "en" ? plant.name_en : plant.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-body italic truncate">
+                    {plant.scientificName}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </Link>
+            </motion.div>
+          ))}
+          {filteredPlants.length === 0 && (
+            <p className="text-center py-8 text-muted-foreground font-body text-sm">
+              {es("No se encontraron plantas.", "No plants found.")}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Diálogo de detalle */}

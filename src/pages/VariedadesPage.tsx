@@ -211,6 +211,8 @@ const VariedadesPage = () => {
             })}
           </div>
         )}
+      </div>{/* /Grid */}
+
       {/* ── Catálogo de plantas ────────────────────────────── */}
       <div className="px-4 pb-4 max-w-lg mx-auto">
         <div className="flex items-center gap-2 mt-8 mb-4">

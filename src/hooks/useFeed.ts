@@ -44,31 +44,38 @@ async function fetchPopularPost(type: string): Promise<any | null> {
     )[0] ?? null;
 }
 
-/** Try to get a random native plant with image; populates cache if empty */
+/** Obtiene una planta nativa aleatoria con imagen.
+ *  Si hay lat/lng invoca la edge function directamente (maneja su propio caché).
+ *  Fallback: consulta native_plants_cache en caso de error o sin ubicación. */
 async function fetchNativePlant(lat?: number | null, lng?: number | null): Promise<any | null> {
-  const queryCache = async () => {
+  let pool: any[] = [];
+
+  // Camino principal: edge function (rápida si ya hay caché de 30 días)
+  if (lat && lng) {
+    try {
+      const { data } = await supabase.functions.invoke("fetch-native-plants", {
+        body: { lat, lng },
+      });
+      if (data?.success && Array.isArray(data.data)) {
+        pool = data.data.filter((p: any) => p.image_url);
+      }
+    } catch {
+      // si falla la edge function, cae al fallback
+    }
+  }
+
+  // Fallback: tabla nativa directa (cualquier región, por si no hay ubicación)
+  if (pool.length === 0) {
     const { data } = await supabase
       .from("native_plants_cache")
       .select("taxon_id, common_name, common_name_en, scientific_name, category, image_url")
       .not("image_url", "is", null)
-      .limit(200); // pool amplio para máxima variedad en el random
-    return data && data.length > 0 ? data[Math.floor(Math.random() * data.length)] : null;
-  };
-
-  const cached = await queryCache();
-  if (cached) return cached;
-
-  // Cache is empty — trigger the edge function if we have location
-  if (lat && lng) {
-    try {
-      await supabase.functions.invoke("fetch-native-plants", { body: { lat, lng } });
-      return await queryCache();
-    } catch {
-      // silently ignore edge function errors
-    }
+      .limit(200);
+    pool = data || [];
   }
 
-  return null;
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 export const useFeed = () => {

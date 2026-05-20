@@ -193,7 +193,7 @@ const FeedPage = () => {
               image={myPhoto}
               bgClass="bg-gradient-to-br from-secondary/80 to-muted"
               emojiBg="🏡"
-              categoryLabel={es("Tu huerto", "Your garden")}
+              categoryLabel={es("Mi huerto", "My garden")}
               categoryClass="bg-earth/80 text-white"
               icon={Sprout}
               title={

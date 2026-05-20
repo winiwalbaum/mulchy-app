@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Eye, EyeOff, Ticket } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Ticket, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,9 +17,11 @@ const AuthPage = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [claimLoading, setClaimLoading] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const a = t.auth as any;
+  const { awaitingInviteCode, claimGoogleInvite, signOut } = useAuth();
 
   const validateInviteCode = async (code: string): Promise<string | null> => {
     const normalized = code.trim().toUpperCase();
@@ -99,6 +102,59 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+  const handleClaimGoogleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteCode.trim()) return;
+    setClaimLoading(true);
+    const ok = await claimGoogleInvite(inviteCode);
+    setClaimLoading(false);
+    if (!ok) {
+      toast.error(a.invalidInviteCode);
+    }
+    // On success, awaitingInviteCode becomes false and App.tsx routes normally
+  };
+
+  if (awaitingInviteCode) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <motion.div className="w-full max-w-md" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHY" />
+            </div>
+            <h1 className="text-2xl font-bold font-display mb-2">🌱 {a.inviteCode}</h1>
+            <p className="text-muted-foreground font-body text-sm">{a.inviteOnlyNotice}</p>
+          </div>
+          <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
+            <form onSubmit={handleClaimGoogleInvite} className="space-y-4">
+              <div>
+                <Label htmlFor="claimCode" className="font-body text-sm">{a.inviteCode}</Label>
+                <div className="relative mt-1">
+                  <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="claimCode"
+                    type="text"
+                    placeholder="MULCHY-BETA-001"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className="pl-10 font-mono tracking-widest"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={claimLoading || !inviteCode.trim()}>
+                {claimLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (t.common as any).next}
+              </Button>
+            </form>
+            <button onClick={() => signOut()} className="w-full mt-3 text-sm text-muted-foreground font-body hover:text-foreground text-center">
+              {(t.common as any).back}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">

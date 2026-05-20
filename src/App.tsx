@@ -49,13 +49,13 @@ const AppLayout = () => {
 };
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, awaitingInviteCode } = useAuth();
 
   return (
     <Routes>
       <Route
         path="/auth"
-        element={user && !loading ? <Navigate to="/dashboard" replace /> : <AuthPage />}
+        element={user && !loading && !awaitingInviteCode ? <Navigate to="/dashboard" replace /> : <AuthPage />}
       />
       <Route
         path="/onboarding"

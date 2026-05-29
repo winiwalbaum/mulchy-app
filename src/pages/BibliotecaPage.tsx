@@ -467,6 +467,19 @@ const BibliotecaPage = () => {
                   </Badge>
                 </div>
 
+                <Button
+                  variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => toggleNative(selectedNative.id)}
+                >
+                  {savedNativeIds.has(selectedNative.id) ? (
+                    <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
+                  ) : (
+                    <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
+                  )}
+                </Button>
+
                 {/* AI-generated description */}
                 <div className="bg-muted/50 rounded-lg p-4">
                   <p className="text-sm font-body font-medium text-foreground mb-1">
@@ -500,19 +513,6 @@ const BibliotecaPage = () => {
                     </a>
                   )}
                 </div>
-
-                <Button
-                  variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
-                  size="sm"
-                  className="w-full gap-2 mt-1"
-                  onClick={() => toggleNative(selectedNative.id)}
-                >
-                  {savedNativeIds.has(selectedNative.id) ? (
-                    <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
-                  ) : (
-                    <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
-                  )}
-                </Button>
               </div>
             </>
           )}

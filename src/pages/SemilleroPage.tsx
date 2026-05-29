@@ -1633,6 +1633,18 @@ const SemilleroPage = () => {
                   )}
                 </div>
               </div>
+              <Button
+                variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => toggleNative(selectedNative.id)}
+              >
+                {savedNativeIds.has(selectedNative.id) ? (
+                  <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
+                ) : (
+                  <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
+                )}
+              </Button>
               {nativeDescLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-body">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1665,18 +1677,6 @@ const SemilleroPage = () => {
                   </a>
                 )}
               </div>
-              <Button
-                variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
-                size="sm"
-                className="w-full gap-2 mt-1"
-                onClick={() => toggleNative(selectedNative.id)}
-              >
-                {savedNativeIds.has(selectedNative.id) ? (
-                  <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
-                ) : (
-                  <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
-                )}
-              </Button>
             </div>
           )}
         </DialogContent>

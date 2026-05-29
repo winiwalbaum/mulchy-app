@@ -110,12 +110,12 @@ export const useCommunity = (typeFilter: PostType | "all", geoFilter: GeoFilter 
       );
     }
 
-    // Sort by likes desc, then by date desc
-    enriched.sort(
-      (a, b) =>
-        b.likes_count - a.likes_count ||
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    // Sort by total engagement (likes + comments) desc, then by date desc
+    enriched.sort((a, b) => {
+      const engA = a.likes_count + a.comments_count;
+      const engB = b.likes_count + b.comments_count;
+      return engB - engA || new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
     setPosts(enriched);
     setLoading(false);

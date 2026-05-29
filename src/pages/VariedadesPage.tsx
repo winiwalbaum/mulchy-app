@@ -9,6 +9,7 @@ import { plants, type PlantCategory } from "@/data/plants";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useHerbario } from "@/hooks/useHerbario";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CATALOG_CATEGORIES: { value: PlantCategory | "all"; label: { es: string; en: string } }[] = [
   { value: "all",          label: { es: "Todas",       en: "All" } },
@@ -55,6 +56,7 @@ const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
 // ─── VariedadesPage ───────────────────────────────────────────
 const VariedadesPage = () => {
   const { lang } = useLanguage();
+  const { user } = useAuth();
   const [varieties, setVarieties] = useState<VarietyCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<VarietyCard | null>(null);
@@ -83,20 +85,35 @@ const VariedadesPage = () => {
 
   useEffect(() => {
     const fetchVarieties = async () => {
+      if (!user) { setLoading(false); return; }
       setLoading(true);
+
+      // Fetch only varieties the user has saved in their herbario
+      const { data: grows } = await supabase
+        .from("user_variety_grows")
+        .select("variety_id")
+        .eq("user_id", user.id);
+
+      if (!grows || grows.length === 0) {
+        setVarieties([]);
+        setLoading(false);
+        return;
+      }
+
+      const ids = grows.map((g: any) => g.variety_id);
       const { data } = await supabase
         .from("plant_varieties")
         .select(
           "id, name, plant_scientific_name, image_url, image_url_2, image_url_3, color, shape, size_weight, difficulty, personal_experience, description, tags, created_at"
         )
-        .eq("approved", true)
-        .order("created_at", { ascending: false })
-        .limit(60);
+        .in("id", ids)
+        .order("created_at", { ascending: false });
+
       setVarieties(data || []);
       setLoading(false);
     };
     fetchVarieties();
-  }, []);
+  }, [user?.id]);
 
   const getPlant = (scientificName: string | null) =>
     scientificName ? plants.find((p) => p.scientificName === scientificName) : null;
@@ -116,10 +133,10 @@ const VariedadesPage = () => {
           </Link>
           <div>
             <h1 className="font-display font-bold text-base">
-              {es("Variedades", "Varieties")}
+              {es("Mis plantas", "My plants")}
             </h1>
             <p className="text-[10px] font-body text-muted-foreground uppercase tracking-widest">
-              {es("Las más recientes de la comunidad", "Most recent from the community")}
+              {es("Tu colección personal", "Your personal collection")}
             </p>
           </div>
         </div>
@@ -138,13 +155,19 @@ const VariedadesPage = () => {
             <Sprout className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
             <p className="text-muted-foreground font-body text-sm">
               {es(
-                "Aún no hay variedades. ¡Sé la primera en agregar una!",
-                "No varieties yet. Be the first to add one!"
+                "Aún no tienes variedades guardadas.",
+                "You haven't saved any varieties yet."
+              )}
+            </p>
+            <p className="text-xs text-muted-foreground font-body mt-1 mb-4">
+              {es(
+                "Guarda variedades desde el Semillero tocando 🔖",
+                "Save varieties from the Seed Library by tapping 🔖"
               )}
             </p>
             <Link
               to="/semillero"
-              className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-primary text-primary-foreground font-body text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-body text-sm font-medium"
             >
               <Sprout className="w-4 h-4" />
               {es("Ir al Semillero", "Go to Seed Library")}
@@ -194,17 +217,17 @@ const VariedadesPage = () => {
                     </span>
                   </div>
 
-                  {/* Botón herbario */}
+                  {/* Botón quitar de colección */}
                   <button
-                    className={`absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm transition-colors ${
-                      savedIds.has(v.id)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-black/30 text-white hover:bg-primary hover:text-primary-foreground"
-                    }`}
-                    onClick={(e) => { e.stopPropagation(); toggleHerbario(v.id); }}
-                    title={savedIds.has(v.id) ? es("Quitar del herbario", "Remove from herbarium") : es("Agregar al herbario", "Add to herbarium")}
+                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm bg-primary text-primary-foreground transition-colors hover:bg-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleHerbario(v.id);
+                      setVarieties((prev) => prev.filter((p) => p.id !== v.id));
+                    }}
+                    title={es("Quitar de mis plantas", "Remove from my plants")}
                   >
-                    <Bookmark className={`w-3.5 h-3.5 ${savedIds.has(v.id) ? "fill-current" : ""}`} />
+                    <Bookmark className="w-3.5 h-3.5 fill-current" />
                   </button>
 
                   {/* Nombre */}
@@ -411,19 +434,17 @@ const VariedadesPage = () => {
                   </p>
                 )}
 
-                {/* Botón herbario */}
+                {/* Botón quitar de colección */}
                 <button
-                  onClick={() => toggleHerbario(selected.id)}
-                  className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors ${
-                    savedIds.has(selected.id)
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "border border-primary/30 text-primary hover:bg-primary/5"
-                  }`}
+                  onClick={() => {
+                    toggleHerbario(selected.id);
+                    setVarieties((prev) => prev.filter((p) => p.id !== selected.id));
+                    setSelected(null);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors border border-destructive/30 text-destructive hover:bg-destructive/5"
                 >
-                  <Bookmark className={`w-4 h-4 ${savedIds.has(selected.id) ? "fill-current" : ""}`} />
-                  {savedIds.has(selected.id)
-                    ? es("✓ En tu herbario", "✓ In your herbarium")
-                    : es("Guardar en mi herbario", "Save to my herbarium")}
+                  <Bookmark className="w-4 h-4" />
+                  {es("Quitar de mis plantas", "Remove from my plants")}
                 </button>
 
                 {/* Link al semillero */}

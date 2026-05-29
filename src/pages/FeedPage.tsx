@@ -322,7 +322,7 @@ const FeedPage = () => {
                 image={nativePlant.image_url}
                 bgClass="bg-gradient-to-br from-emerald-100 to-green-50"
                 emojiBg={categoryEmoji[nativePlant.category] || "🌿"}
-                categoryLabel={es("Planta nativa", "Native plant")}
+                categoryLabel={es("Plantas nativas", "Native plants")}
                 categoryClass="bg-emerald-700/90 text-white"
                 icon={TreePine}
                 title={
@@ -339,7 +339,7 @@ const FeedPage = () => {
                 state={{ tab: "native" }}
                 image="/illustrations/maidenhair-fern.jpg"
                 bgClass="bg-[#FAFAF8]"
-                categoryLabel={es("Planta nativa", "Native plant")}
+                categoryLabel={es("Plantas nativas", "Native plants")}
                 categoryClass="bg-emerald-700/90 text-white"
                 icon={TreePine}
                 title={es("Explora plantas nativas", "Explore native plants")}

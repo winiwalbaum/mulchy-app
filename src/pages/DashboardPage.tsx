@@ -92,8 +92,8 @@ const generateICSContent = (title: string, description: string, date: Date, lang
   const endDate = new Date(startDate);
   endDate.setHours(10, 0, 0, 0);
   const returnUrl = buildReturnUrl();
-  const appName = lang === "en" ? "MULCHII" : "MULCHII";
-  const returnLabel = lang === "en" ? "Back to MULCHII" : "Volver a MULCHII";
+  const appName = lang === "en" ? "Mulchii" : "Mulchii";
+  const returnLabel = lang === "en" ? "Back to Mulchii" : "Volver a Mulchii";
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${appName}//ES`,
     "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
@@ -125,7 +125,7 @@ const getGoogleCalendarUrl = (title: string, description: string, date: Date, la
   const endDate = new Date(startDate);
   endDate.setHours(10, 0, 0, 0);
   const returnUrl = buildReturnUrl();
-  const returnLabel = lang === "en" ? "Back to MULCHII" : "Volver a MULCHII";
+  const returnLabel = lang === "en" ? "Back to Mulchii" : "Volver a Mulchii";
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: `🌱 ${title}`,
@@ -349,7 +349,7 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="container flex items-center gap-3 py-4">
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="Mulchii" />
           <h1 className="text-xl font-semibold">{d.title}</h1>
         </div>
       </header>

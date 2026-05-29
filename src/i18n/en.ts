@@ -38,7 +38,7 @@ const en: Translations = {
     welcomeBackToast: "Welcome back!",
     authError: "Authentication error",
     inviteCode: "Invitation code",
-    inviteOnlyNotice: "MULCHII is an invite-only community. You need a code to join.",
+    inviteOnlyNotice: "Mulchii is an invite-only community. You need a code to join.",
     invalidInviteCode: "Invalid or already used invitation code.",
   },
 
@@ -137,7 +137,7 @@ const en: Translations = {
     googleDesc: "Opens in a new tab",
     appleCalendar: "Apple Calendar / Other",
     appleDesc: "Download .ics file",
-    returnLink: "The event includes a return link to MULCHII 🌱",
+    returnLink: "The event includes a return link to Mulchii 🌱",
     openingGoogle: "Opening Google Calendar...",
     icsDownloaded: ".ics file downloaded",
     southernHem: "Southern Hemisphere:",

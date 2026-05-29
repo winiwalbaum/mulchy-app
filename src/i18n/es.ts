@@ -39,7 +39,7 @@ const es: DeepStringRecord = {
     welcomeBackToast: "¡Bienvenido de vuelta!",
     authError: "Error de autenticación",
     inviteCode: "Código de invitación",
-    inviteOnlyNotice: "MULCHII es una comunidad por invitación. Necesitas un código para unirte.",
+    inviteOnlyNotice: "Mulchii es una comunidad por invitación. Necesitas un código para unirte.",
     invalidInviteCode: "Código de invitación inválido o ya utilizado.",
   },
 
@@ -87,7 +87,7 @@ const es: DeepStringRecord = {
   // ─── Landing ────────────────────────────────────────────
   landing: {
     tagline: "Tu guía de jardinería personalizada",
-    title1: "MULCHII",
+    title1: "Mulchii",
     title2: "mi bitácora de huerta",
     subtitle: "Organiza siembras, podas y cuidados según tu clima.",
     startNow: "Comenzar ahora",
@@ -138,7 +138,7 @@ const es: DeepStringRecord = {
     googleDesc: "Se abre en una nueva pestaña",
     appleCalendar: "Apple Calendar / Otro",
     appleDesc: "Descarga archivo .ics",
-    returnLink: "El evento incluye un enlace de retorno a MULCHII 🌱",
+    returnLink: "El evento incluye un enlace de retorno a Mulchii 🌱",
     openingGoogle: "Abriendo Google Calendar...",
     icsDownloaded: "Archivo .ics descargado",
     southernHem: "Hemisferio Sur:",
@@ -169,7 +169,7 @@ const es: DeepStringRecord = {
 
   // ─── Bitácora ───────────────────────────────────────────
   bitacora: {
-    title: "MULCHII",
+    title: "Mulchii",
     placeholder: "Anota algo sobre tu huerta hoy...",
     addNote: "Agregar nota",
     empty: "Tu bitácora está vacía. ¡Empieza a anotar!",

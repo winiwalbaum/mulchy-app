@@ -246,8 +246,8 @@ const ProfilePage = () => {
             </h3>
             <p className="text-xs text-muted-foreground font-body">
               {lang === "en"
-                ? "Share these with people you want to invite to MULCHII."
-                : "Comparte estos códigos con personas que quieras invitar a MULCHII."}
+                ? "Share these with people you want to invite to Mulchii."
+                : "Comparte estos códigos con personas que quieras invitar a Mulchii."}
             </p>
             <div className="space-y-2">
               {inviteCodes.map(({ code, used_by }) => (

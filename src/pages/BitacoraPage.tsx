@@ -144,7 +144,7 @@ const BitacoraPage = () => {
   const [sharing, setSharing] = useState(false);
   const [savedPosts, setSavedPosts] = useState<any[]>(() => {
     try {
-      const data = JSON.parse(localStorage.getItem("mulchy-saved-posts") || "{}");
+      const data = JSON.parse(localStorage.getItem("mulchii-saved-posts") || "{}");
       return Object.values(data).sort(
         (a: any, bv: any) => new Date(bv.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -281,7 +281,7 @@ const BitacoraPage = () => {
         <div className="px-4 py-3 max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+              <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
               <span className="font-display font-bold text-lg">{b.title}</span>
             </div>
             <div className="text-right">
@@ -489,7 +489,7 @@ const BitacoraPage = () => {
                       </div>
                     </div>
                     <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
-                      <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHY®</p>
+                      <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHII®</p>
                       {entry.text && <p className="font-body text-[10px] leading-relaxed line-clamp-3 text-gray-800 mb-0.5">{entry.text}</p>}
                       <p className="text-[8px] text-gray-400 font-body">
                         {new Date(entry.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-CL", { day: "numeric", month: "short" })}
@@ -527,9 +527,9 @@ const BitacoraPage = () => {
                         <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => {
-                              const current = JSON.parse(localStorage.getItem("mulchy-saved-posts") || "{}");
+                              const current = JSON.parse(localStorage.getItem("mulchii-saved-posts") || "{}");
                               delete current[post.id];
-                              localStorage.setItem("mulchy-saved-posts", JSON.stringify(current));
+                              localStorage.setItem("mulchii-saved-posts", JSON.stringify(current));
                               setSavedPosts((prev) => prev.filter((p: any) => p.id !== post.id));
                             }}
                             className="w-6 h-6 rounded bg-white/85 flex items-center justify-center text-gray-600 hover:text-destructive shadow-sm"
@@ -539,7 +539,7 @@ const BitacoraPage = () => {
                         </div>
                       </div>
                       <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
-                        <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHY®</p>
+                        <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHII®</p>
                         <h3 className="font-display font-bold text-sm leading-tight text-gray-900 line-clamp-2 mb-0.5">{post.title}</h3>
                         {post.body && <p className="text-[9px] text-gray-500 font-body leading-relaxed line-clamp-2 mb-0.5">{post.body}</p>}
                         <p className="text-[9px] text-gray-400 font-body truncate">{post.display_name}{post.city && ` · ${post.city}`}</p>

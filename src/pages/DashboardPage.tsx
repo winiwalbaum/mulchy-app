@@ -92,8 +92,8 @@ const generateICSContent = (title: string, description: string, date: Date, lang
   const endDate = new Date(startDate);
   endDate.setHours(10, 0, 0, 0);
   const returnUrl = buildReturnUrl();
-  const appName = lang === "en" ? "MULCHY" : "MULCHY";
-  const returnLabel = lang === "en" ? "Back to MULCHY" : "Volver a MULCHY";
+  const appName = lang === "en" ? "MULCHII" : "MULCHII";
+  const returnLabel = lang === "en" ? "Back to MULCHII" : "Volver a MULCHII";
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${appName}//ES`,
     "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
@@ -101,7 +101,7 @@ const generateICSContent = (title: string, description: string, date: Date, lang
     `SUMMARY:🌱 ${title}`,
     `DESCRIPTION:${description}\\n\\n🔗 ${returnLabel}: ${returnUrl}`,
     `URL:${returnUrl}`, "STATUS:CONFIRMED",
-    `UID:mulchy-${Date.now()}@mulchy`,
+    `UID:mulchii-${Date.now()}@mulchii`,
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
 };
@@ -125,7 +125,7 @@ const getGoogleCalendarUrl = (title: string, description: string, date: Date, la
   const endDate = new Date(startDate);
   endDate.setHours(10, 0, 0, 0);
   const returnUrl = buildReturnUrl();
-  const returnLabel = lang === "en" ? "Back to MULCHY" : "Volver a MULCHY";
+  const returnLabel = lang === "en" ? "Back to MULCHII" : "Volver a MULCHII";
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: `🌱 ${title}`,
@@ -213,10 +213,10 @@ const DashboardPage = () => {
   const monthsShort = (d.monthsShort || d.months) as string[];
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [deletedItems, setDeletedItems] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("mulchy-deleted") || "{}"); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem("mulchii-deleted") || "{}"); } catch { return {}; }
   });
   const [scheduledItems, setScheduledItems] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("mulchy-scheduled") || "{}"); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem("mulchii-scheduled") || "{}"); } catch { return {}; }
   });
   const [exportItem, setExportItem] = useState<SchedulableItem | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -226,7 +226,7 @@ const DashboardPage = () => {
     const label = date.toLocaleDateString(lang === "en" ? "en-US" : "es-CL", { day: "numeric", month: "short" });
     setScheduledItems(prev => {
       const next = { ...prev, [id]: label };
-      localStorage.setItem("mulchy-scheduled", JSON.stringify(next));
+      localStorage.setItem("mulchii-scheduled", JSON.stringify(next));
       return next;
     });
   };
@@ -253,7 +253,7 @@ const DashboardPage = () => {
     e.stopPropagation();
     setDeletedItems(prev => {
       const next = { ...prev, [id]: true };
-      localStorage.setItem("mulchy-deleted", JSON.stringify(next));
+      localStorage.setItem("mulchii-deleted", JSON.stringify(next));
       return next;
     });
   };
@@ -349,7 +349,7 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="container flex items-center gap-3 py-4">
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <h1 className="text-xl font-semibold">{d.title}</h1>
         </div>
       </header>

@@ -108,7 +108,7 @@ const OnboardingPage = () => {
       {/* Progress */}
       <div className="px-6 pt-6">
         <div className="flex items-center gap-2 mb-2">
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <span className="font-display font-semibold">{ob.setup as string}</span>
         </div>
         <div className="flex gap-1.5">

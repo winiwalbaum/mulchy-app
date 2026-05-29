@@ -52,7 +52,7 @@ const HeroSection = () => {
         >
           <img
             src="/logo.png"
-            alt="MULCHY"
+            alt="MULCHII"
             className="w-52 h-52 object-contain drop-shadow-2xl"
           />
         </motion.div>
@@ -141,7 +141,7 @@ const Footer = () => {
     <footer className="border-t border-border py-10">
       <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <span className="font-display font-semibold text-lg">{l.title1} {l.title2}</span>
         </div>
         <p className="text-sm text-muted-foreground font-body">{l.footer}</p>

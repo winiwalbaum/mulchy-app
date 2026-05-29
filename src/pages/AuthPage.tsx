@@ -124,7 +124,7 @@ const AuthPage = () => {
         <motion.div className="w-full max-w-md" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHY" />
+              <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHII" />
             </div>
             <h1 className="text-2xl font-bold font-display mb-2">🌱 {a.inviteCode}</h1>
             <p className="text-muted-foreground font-body text-sm">{a.inviteOnlyNotice}</p>
@@ -138,7 +138,7 @@ const AuthPage = () => {
                   <Input
                     id="claimCode"
                     type="text"
-                    placeholder="MULCHY-BETA-001"
+                    placeholder="MULCHII-BETA-001"
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                     className="pl-10 font-mono tracking-widest"
@@ -165,7 +165,7 @@ const AuthPage = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="w-36 h-36 flex items-center justify-center">
-              <img src="/logo.png" className="w-full h-full object-contain" alt="MULCHY" />
+              <img src="/logo.png" className="w-full h-full object-contain" alt="MULCHII" />
             </div>
           </div>
           <h1 className="text-3xl font-bold font-display mb-2">
@@ -193,7 +193,7 @@ const AuthPage = () => {
                 <Input
                   id="inviteCode"
                   type="text"
-                  placeholder="MULCHY-BETA-001"
+                  placeholder="MULCHII-BETA-001"
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                   className="pl-10 font-mono tracking-widest"

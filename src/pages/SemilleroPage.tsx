@@ -1581,7 +1581,7 @@ const SemilleroPage = () => {
                           </div>
                         </div>
                         <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
-                          <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHY®</p>
+                          <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHII®</p>
                           <h3 className="font-display font-bold text-sm leading-tight text-gray-900 capitalize">{getNativeName(plant)}</h3>
                           <p className="text-[9px] text-gray-400 font-body italic mt-0.5 truncate">{plant.scientific_name}</p>
                         </div>

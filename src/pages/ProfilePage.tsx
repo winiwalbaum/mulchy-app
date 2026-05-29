@@ -98,7 +98,7 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="container flex items-center gap-4 py-4">
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <h1 className="text-xl font-semibold">{p.title}</h1>
         </div>
       </header>
@@ -128,7 +128,7 @@ const ProfilePage = () => {
                 />
               ) : (
                 <div className="w-full h-full bg-white flex items-center justify-center">
-                  <img src="/logo.png" className="w-4/5 h-4/5 object-contain" alt="MULCHY" />
+                  <img src="/logo.png" className="w-4/5 h-4/5 object-contain" alt="MULCHII" />
                 </div>
               )}
             </div>
@@ -246,8 +246,8 @@ const ProfilePage = () => {
             </h3>
             <p className="text-xs text-muted-foreground font-body">
               {lang === "en"
-                ? "Share these with people you want to invite to MULCHY."
-                : "Comparte estos códigos con personas que quieras invitar a MULCHY."}
+                ? "Share these with people you want to invite to MULCHII."
+                : "Comparte estos códigos con personas que quieras invitar a MULCHII."}
             </p>
             <div className="space-y-2">
               {inviteCodes.map(({ code, used_by }) => (

@@ -56,7 +56,7 @@ function getTimeAgo(dateStr: string, c: any): string {
 }
 
 const getSavedPosts = (): Record<string, CommunityPost> => {
-  try { return JSON.parse(localStorage.getItem("mulchy-saved-posts") || "{}"); } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem("mulchii-saved-posts") || "{}"); } catch { return {}; }
 };
 
 const PostCard = ({
@@ -86,7 +86,7 @@ const PostCard = ({
       current[post.id] = { ...post };
       toast.success(c.savedToJournal);
     }
-    localStorage.setItem("mulchy-saved-posts", JSON.stringify(current));
+    localStorage.setItem("mulchii-saved-posts", JSON.stringify(current));
     setSaved(!saved);
   };
   const typeLabel =
@@ -127,7 +127,7 @@ const PostCard = ({
         {/* Label area */}
         <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
           <div className="flex items-center justify-between mb-0.5">
-            <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase">MULCHY®</p>
+            <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase">MULCHII®</p>
             <span className="text-[8px] text-gray-400 font-body">{timeAgo}</span>
           </div>
           <h3 className="font-display font-bold text-sm leading-tight text-gray-900 line-clamp-2 mb-0.5">{post.title}</h3>

@@ -79,7 +79,7 @@ const TareasPage = () => {
           <Button variant="ghost" size="icon" asChild>
             <Link to="/"><ArrowLeft className="w-5 h-5" /></Link>
           </Button>
-          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
+          <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <h1 className="text-xl font-semibold">{tr.title}</h1>
           <span className="ml-auto text-xs text-muted-foreground font-body">{filtered.length} {d.tasks}</span>
         </div>

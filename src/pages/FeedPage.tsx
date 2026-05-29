@@ -160,8 +160,8 @@ const FeedPage = () => {
         <div className="px-4 py-3 max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHY" />
-              <span className="font-display font-bold text-lg">MULCHY</span>
+              <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
+              <span className="font-display font-bold text-lg">MULCHII</span>
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground font-body capitalize">{today}</p>

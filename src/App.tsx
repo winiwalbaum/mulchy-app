@@ -19,7 +19,6 @@ import BitacoraPage from "./pages/BitacoraPage";
 import VariedadesPage from "./pages/VariedadesPage";
 import ProfilePage from "./pages/ProfilePage";
 import CommunityPage from "./pages/CommunityPage";
-import PestScannerPage from "./pages/PestScannerPage";
 import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
@@ -36,7 +35,7 @@ const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const showBottomNavRoutes = ["/dashboard", "/tareas", "/semillero", "/biblioteca", "/bitacora", "/comunidad", "/perfil", "/plagas"];
+const showBottomNavRoutes = ["/dashboard", "/tareas", "/semillero", "/biblioteca", "/bitacora", "/comunidad", "/perfil"];
 
 const AppLayout = () => {
   const location = useLocation();
@@ -94,10 +93,6 @@ const AppRoutes = () => {
       <Route
         path="/comunidad"
         element={<ProtectedRoute><OnboardingGuard><CommunityPage /></OnboardingGuard></ProtectedRoute>}
-      />
-      <Route
-        path="/plagas"
-        element={<ProtectedRoute><OnboardingGuard><PestScannerPage /></OnboardingGuard></ProtectedRoute>}
       />
       <Route
         path="/perfil"

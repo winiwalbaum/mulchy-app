@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, Plus, ChevronRight, Star, Leaf,
+  Search, Plus, ChevronLeft, ChevronRight, Star, Leaf,
   Sprout, Users, X, Check, Loader2, Calendar, ArrowLeft, MapPin, ExternalLink, TreePine, Camera, Pencil,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -680,6 +681,7 @@ const VarietyDetail = ({
   const [currentVariety, setCurrentVariety] = useState(variety);
   const [growsKey, setGrowsKey] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const isOwner = userId === currentVariety.created_by;
   const photos = [currentVariety.image_url, currentVariety.image_url_2, currentVariety.image_url_3].filter(Boolean) as string[];
@@ -699,7 +701,10 @@ const VarietyDetail = ({
       {/* Photo carousel */}
       {photos.length > 0 && (
         <div>
-          <div className="aspect-video rounded-xl overflow-hidden bg-muted/20">
+          <div
+            className="aspect-video rounded-xl overflow-hidden bg-muted/20 cursor-zoom-in"
+            onClick={() => setLightboxOpen(true)}
+          >
             <img src={photos[photoIndex]} alt={variety.name} className="w-full h-full object-cover" />
           </div>
           {photos.length > 1 && (
@@ -899,6 +904,68 @@ const VarietyDetail = ({
         lang={lang}
         createdBy={variety.created_by}
       />
+
+      {/* Lightbox */}
+      {lightboxOpen && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: 9999, background: "rgba(0,0,0,0.95)" }}
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Cerrar */}
+          <button
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            style={{ zIndex: 10000 }}
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Prev / Next */}
+          {photos.length > 1 && (
+            <>
+              <button
+                className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                style={{ zIndex: 10000 }}
+                onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => (p - 1 + photos.length) % photos.length); }}
+              >
+                <ChevronLeft className="w-7 h-7" />
+              </button>
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                style={{ zIndex: 10000 }}
+                onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => (p + 1) % photos.length); }}
+              >
+                <ChevronRight className="w-7 h-7" />
+              </button>
+            </>
+          )}
+
+          {/* Imagen */}
+          <img
+            src={photos[photoIndex]}
+            alt={variety.name}
+            className="max-w-full max-h-full object-contain select-none"
+            style={{ padding: "3rem" }}
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Dots */}
+          {photos.length > 1 && (
+            <div className="absolute bottom-6 flex gap-2">
+              {photos.map((_, i) => (
+                <button
+                  key={i}
+                  style={{ zIndex: 10000 }}
+                  onClick={(e) => { e.stopPropagation(); setPhotoIndex(i); }}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${i === photoIndex ? "bg-white" : "bg-white/40"}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
@@ -958,6 +1025,21 @@ const FichaTecnica = ({ plant, lang }: { plant: Plant; lang: string }) => {
       icon: "⚡",
       label: l === "en" ? "Difficulty" : "Dificultad",
       value: l === "en" ? plant.difficulty_en : plant.difficulty,
+    },
+    {
+      icon: "🌱",
+      label: l === "en" ? "Start seedlings" : "Inicio almácigo",
+      value: l === "en" ? extra?.seedling_start_en ?? extra?.seedling_start : extra?.seedling_start,
+    },
+    {
+      icon: "📐",
+      label: l === "en" ? "Spacing" : "Espaciado",
+      value: l === "en" ? extra?.spacing_en ?? extra?.spacing : extra?.spacing,
+    },
+    {
+      icon: "🤝",
+      label: l === "en" ? "Companion plants" : "Asociaciones",
+      value: l === "en" ? extra?.companions_en ?? extra?.companions : extra?.companions,
     },
   ].filter((r) => r.value && r.value !== "—");
 

@@ -107,13 +107,13 @@ export const useFeed = () => {
 
       const [varietyRes, photoRes, recipeRes, journalPhotoRes, varietyPhotoRes] =
         await Promise.allSettled([
-          // Última variedad registrada
+          // Variedad aleatoria del catálogo (con foto)
           supabase
             .from("plant_varieties")
-            .select("id, name, plant_scientific_name, image_url, description, created_at")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+            .select("id, name, plant_scientific_name, image_url, image_url_2, image_url_3, description, created_at")
+            .eq("approved", true)
+            .not("image_url", "is", null)
+            .limit(40),
           // Foto más popular de comunidad
           fetchPopularPost("photo"),
           // Receta más popular de comunidad
@@ -152,9 +152,15 @@ export const useFeed = () => {
       // Native plant (with auto-populate fallback)
       const nativePlant = await fetchNativePlant(profile?.latitude, profile?.longitude);
 
+      const varietyPool: any[] =
+        varietyRes.status === "fulfilled" ? ((varietyRes.value as any).data ?? []) : [];
+      const randomVariety =
+        varietyPool.length > 0
+          ? varietyPool[Math.floor(Math.random() * varietyPool.length)]
+          : null;
+
       setData({
-        latestVariety:
-          varietyRes.status === "fulfilled" ? (varietyRes.value as any).data : null,
+        latestVariety: randomVariety,
         popularPhoto: photoRes.status === "fulfilled" ? photoRes.value : null,
         popularRecipe: recipeRes.status === "fulfilled" ? recipeRes.value : null,
         seasonTask,

@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es as esLocale, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import WeatherWidget from "@/components/WeatherWidget";
+import { useWeather } from "@/hooks/useWeather";
 import { gardenTasks, seasonConfig, taskCategories, type GardenTask, type Season } from "@/data/gardenTasks";
 import {
   getLunarPeriodsForMonth, getCurrentLunarPeriod, moonPhaseInfo,
@@ -206,6 +207,7 @@ const buildTimeline = (month: number, isSH: boolean, lang: string): SchedulableI
 const DashboardPage = () => {
   const { profile } = useProfile();
   const { t, lang } = useLanguage();
+  const { weather } = useWeather();
   const d = t.dashboard as any;
   const dateLocale = lang === "en" ? enUS : esLocale;
   const monthsShort = (d.monthsShort || d.months) as string[];
@@ -285,6 +287,54 @@ const DashboardPage = () => {
 
   const currentPeriod = getCurrentLunarPeriod();
 
+  // Weather-to-task tip: derive a contextual gardening tip from current alerts
+  const weatherTip = useMemo(() => {
+    if (!weather?.alerts?.length) return null;
+    const alert = weather.alerts[0]; // use the most important alert
+    const es = (spa: string, en: string) => lang === "en" ? en : spa;
+    if (alert.type === "frost" || alert.type === "frost_forecast") {
+      return {
+        emoji: "❄️",
+        tip: es(
+          "Cubre trasplantes recientes con agrovelo o tela. Riega en la mañana, nunca al anochecer.",
+          "Cover recent transplants with fleece. Water in the morning, never at dusk."
+        ),
+        bg: "bg-blue-50 border-blue-200 text-blue-900",
+      };
+    }
+    if (alert.type === "heat") {
+      return {
+        emoji: "🔥",
+        tip: es(
+          "Riega antes de las 9am. Da sombra a lechugas, espinacas y apio. Aplica mulch para retener humedad.",
+          "Water before 9am. Shade lettuce, spinach and celery. Apply mulch to retain moisture."
+        ),
+        bg: "bg-orange-50 border-orange-200 text-orange-900",
+      };
+    }
+    if (alert.type === "rain") {
+      return {
+        emoji: "🌧️",
+        tip: es(
+          "No necesitas regar hoy. Momento ideal para sembrar directo o trasplantar — la lluvia hace el resto. También puedes aplicar compost en superficie.",
+          "No need to water today. Perfect time for direct sowing or transplanting — the rain does the rest. Also great for applying surface compost."
+        ),
+        bg: "bg-sky-50 border-sky-200 text-sky-900",
+      };
+    }
+    if (alert.type === "wind") {
+      return {
+        emoji: "💨",
+        tip: es(
+          "Asegura tutores, mallas y plantas altas. Evita trasplantar hoy — el viento estrés a las raíces.",
+          "Secure stakes, nets and tall plants. Avoid transplanting today — wind stresses new roots."
+        ),
+        bg: "bg-gray-50 border-gray-200 text-gray-800",
+      };
+    }
+    return null;
+  }, [weather?.alerts, lang]);
+
   const formatDateRange = (start?: string, end?: string) => {
     if (!start || !end) return "";
     const s = new Date(start + "T12:00:00");
@@ -312,6 +362,19 @@ const DashboardPage = () => {
 
         {/* Divider */}
         <div className="max-w-2xl mx-auto border-t border-border mb-8" />
+
+        {/* Weather → Task tip banner */}
+        {weatherTip && (
+          <motion.div
+            className={`max-w-2xl mx-auto mb-6 flex items-start gap-3 p-4 rounded-2xl border ${weatherTip.bg}`}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            <span className="text-xl shrink-0">{weatherTip.emoji}</span>
+            <p className="text-sm font-body leading-relaxed">{weatherTip.tip}</p>
+          </motion.div>
+        )}
 
         {/* Month selector */}
         <div className="max-w-2xl mx-auto mb-6">

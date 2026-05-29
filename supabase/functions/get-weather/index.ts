@@ -22,6 +22,9 @@ serve(async (req) => {
     const url = new URL(req.url);
     const lat = url.searchParams.get('lat');
     const lon = url.searchParams.get('lon');
+    const minTempParam = url.searchParams.get('min_temp');
+    const maxTempParam = url.searchParams.get('max_temp');
+    const frostType = url.searchParams.get('frost_type') || 'heladas_ocasionales';
 
     if (!lat || !lon) {
       return new Response(
@@ -39,6 +42,10 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // User's declared extreme temperatures (optional)
+    const userMinTemp = minTempParam ? parseFloat(minTempParam) : null;
+    const userMaxTemp = maxTempParam ? parseFloat(maxTempParam) : null;
 
     // Fetch current weather + forecast
     const [currentRes, forecastRes] = await Promise.all([
@@ -62,25 +69,40 @@ serve(async (req) => {
     const current = await currentRes.json();
     const forecast = await forecastRes.json();
 
-    // Process alerts
+    // Process alerts — personalized with user's microclimate data
     const alerts: Array<{ type: string; message: string; severity: string }> = [];
+    const temp = current.main.temp;
 
-    // Frost alert
-    if (current.main.temp <= 2) {
+    // ── Frost thresholds — adapted to user's climate ──────────────
+    // If user declared frost-prone zone or has a low min_temp → warn earlier
+    const isFrostProne = frostType === 'heladas_frecuentes';
+    const isFrostOccasional = frostType === 'heladas_ocasionales';
+    const frostHighThreshold = isFrostProne ? 1 : 2;
+    const frostMediumThreshold = isFrostProne ? 5 : (isFrostOccasional ? 4 : 3);
+
+    // Also lower thresholds if user declared a very cold min_temp
+    const effectiveFrostHigh = (userMinTemp !== null && userMinTemp < -2) ? 3 : frostHighThreshold;
+    const effectiveFrostMedium = (userMinTemp !== null && userMinTemp < -2) ? 7 : frostMediumThreshold;
+
+    if (temp <= effectiveFrostHigh) {
+      const extra = userMinTemp !== null
+        ? ` Tu zona alcanza hasta ${userMinTemp}°C en invierno.`
+        : '';
       alerts.push({
         type: 'frost',
-        message: `⚠️ Riesgo de helada: ${current.main.temp.toFixed(1)}°C. Protege tus plantas sensibles.`,
+        message: `⚠️ Riesgo de helada: ${temp.toFixed(1)}°C. Protege tus plantas sensibles.${extra}`,
         severity: 'high',
       });
-    } else if (current.main.temp <= 5) {
+    } else if (temp <= effectiveFrostMedium && frostType !== 'sin_heladas') {
+      const extra = userMinTemp !== null ? ` (tu mínima histórica: ${userMinTemp}°C)` : '';
       alerts.push({
         type: 'frost',
-        message: `🌡️ Temperatura baja: ${current.main.temp.toFixed(1)}°C. Vigila plantas delicadas.`,
+        message: `🌡️ Temperatura baja: ${temp.toFixed(1)}°C${extra}. Vigila los trasplantes recientes.`,
         severity: 'medium',
       });
     }
 
-    // Rain alert
+    // ── Rain alert ────────────────────────────────────────────────
     if (current.rain && current.rain['1h'] && current.rain['1h'] > 5) {
       alerts.push({
         type: 'rain',
@@ -89,7 +111,7 @@ serve(async (req) => {
       });
     }
 
-    // Wind alert
+    // ── Wind alert ────────────────────────────────────────────────
     if (current.wind && current.wind.speed > 10) {
       alerts.push({
         type: 'wind',
@@ -98,24 +120,34 @@ serve(async (req) => {
       });
     }
 
-    // Heat alert
-    if (current.main.temp >= 35) {
+    // ── Heat alert — adapted to user's declared max temp ──────────
+    // If user's max_temp is low, they're less adapted to heat → warn earlier
+    const heatThreshold = (userMaxTemp !== null && userMaxTemp < 32) ? 28
+      : (userMaxTemp !== null && userMaxTemp > 38) ? 38
+      : 35;
+
+    if (temp >= heatThreshold) {
+      const extra = userMaxTemp !== null
+        ? ` Tu zona puede llegar hasta ${userMaxTemp}°C.`
+        : '';
+      const severity = temp >= 38 ? 'high' : 'medium';
       alerts.push({
         type: 'heat',
-        message: `🔥 Calor extremo: ${current.main.temp.toFixed(1)}°C. Riega temprano y da sombra.`,
-        severity: 'high',
+        message: `🔥 Calor${temp >= 38 ? ' extremo' : ' intenso'}: ${temp.toFixed(1)}°C.${extra} Riega temprano y da sombra.`,
+        severity,
       });
     }
 
-    // Check forecast for upcoming frost
+    // ── Upcoming frost forecast ───────────────────────────────────
+    const frostForecastThreshold = frostType === 'sin_heladas' ? 3 : (isFrostProne ? 4 : 2);
     const upcomingFrost = forecast.list?.find(
-      (f: any) => f.main.temp_min <= 2
+      (f: any) => f.main.temp_min <= frostForecastThreshold
     );
-    if (upcomingFrost && current.main.temp > 2) {
+    if (upcomingFrost && temp > effectiveFrostHigh) {
       const frostDate = new Date(upcomingFrost.dt * 1000);
       alerts.push({
         type: 'frost_forecast',
-        message: `❄️ Helada prevista para ${frostDate.toLocaleDateString('es-CL', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}. Prepara coberturas.`,
+        message: `❄️ Helada prevista para el ${frostDate.toLocaleDateString('es-CL', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}. Prepara coberturas.`,
         severity: 'medium',
       });
     }

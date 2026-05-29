@@ -8,8 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Leaf, MapPin, Thermometer, Wind, ChevronRight, ChevronLeft, Check, Loader2, Globe } from "lucide-react";
+import { MapPin, Thermometer, ChevronRight, ChevronLeft, Check, Loader2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import LocationPicker from "@/components/LocationPicker";
 
@@ -37,13 +36,12 @@ const OnboardingPage = () => {
   // Step 3: Climate
   const [minTemp, setMinTemp] = useState("");
   const [maxTemp, setMaxTemp] = useState("");
-  const [windExposure, setWindExposure] = useState("none");
-  const [hasValleyEffect, setHasValleyEffect] = useState(false);
+  const [frostType, setFrostType] = useState("heladas_ocasionales");
 
 
   const totalSteps = 4;
   const ob = t.onboarding as any;
-  const windOpts = ob.windOptions as { value: string; label: string; desc: string }[];
+  const frostOpts = ob.frostOptions as { value: string; label: string; emoji: string; desc: string }[];
   const pronounOpts = ob.pronounOptions as string[];
 
   const handleLangSelect = (l: "es" | "en") => {
@@ -80,8 +78,8 @@ const OnboardingPage = () => {
           city,
           min_temp: minTemp ? parseFloat(minTemp) : null,
           max_temp: maxTemp ? parseFloat(maxTemp) : null,
-          wind_exposure: windExposure,
-          has_valley_effect: hasValleyEffect,
+          wind_exposure: frostType,
+          has_valley_effect: false,
           onboarding_completed: true,
           language: selectedLang,
         })
@@ -225,47 +223,62 @@ const OnboardingPage = () => {
                   <h2 className="text-2xl font-bold font-display">{ob.microclimate as string}</h2>
                 </div>
                 <p className="text-muted-foreground font-body mb-6">{ob.microclimateDesc as string}</p>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="font-body text-sm">{ob.minTemp as string}</Label>
-                      <Input type="number" value={minTemp} onChange={(e) => setMinTemp(e.target.value)} placeholder="-5" className="mt-1 font-body" />
-                    </div>
-                    <div>
-                      <Label className="font-body text-sm">{ob.maxTemp as string}</Label>
-                      <Input type="number" value={maxTemp} onChange={(e) => setMaxTemp(e.target.value)} placeholder="35" className="mt-1 font-body" />
-                    </div>
-                  </div>
+                <div className="space-y-5">
+                  {/* Tipo de invierno */}
                   <div>
-                    <Label className="font-body text-sm mb-2 block">
-                      <Wind className="w-4 h-4 inline mr-1" />
-                      {ob.windExposure as string}
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {windOpts.map((opt) => (
+                    <Label className="font-body text-sm font-medium mb-3 block">{ob.frostType as string}</Label>
+                    <div className="space-y-2">
+                      {frostOpts.map((opt) => (
                         <button
                           key={opt.value}
-                          onClick={() => setWindExposure(opt.value)}
-                          className={`p-3 rounded-xl text-left transition-colors border ${
-                            windExposure === opt.value
-                              ? "bg-primary text-primary-foreground border-primary"
+                          onClick={() => setFrostType(opt.value)}
+                          className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all border ${
+                            frostType === opt.value
+                              ? "bg-primary text-primary-foreground border-primary shadow-soft"
                               : "bg-card text-foreground border-border hover:bg-muted"
                           }`}
                         >
-                          <span className="font-body text-sm font-medium block">{opt.label}</span>
-                          <span className={`font-body text-xs ${windExposure === opt.value ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                            {opt.desc}
-                          </span>
+                          <span className="text-2xl">{opt.emoji}</span>
+                          <div>
+                            <span className="font-body text-sm font-semibold block">{opt.label}</span>
+                            <span className={`font-body text-xs ${frostType === opt.value ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+                              {opt.desc}
+                            </span>
+                          </div>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border">
-                    <div>
-                      <span className="font-body text-sm font-medium">{ob.valleyEffect as string}</span>
-                      <p className="font-body text-xs text-muted-foreground">{ob.valleyEffectDesc as string}</p>
+
+                  {/* Temperaturas extremas (opcionales) */}
+                  <div>
+                    <Label className="font-body text-sm font-medium mb-3 block">
+                      {lang === "en" ? "Extreme temperatures (optional)" : "Temperaturas extremas (opcional)"}
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="font-body text-xs text-muted-foreground">{ob.minTemp as string}</Label>
+                        <Input
+                          type="number"
+                          value={minTemp}
+                          onChange={(e) => setMinTemp(e.target.value)}
+                          placeholder="-3"
+                          className="mt-1 font-body"
+                        />
+                        <p className="text-[10px] text-muted-foreground font-body mt-1">{ob.minTempHint as string}</p>
+                      </div>
+                      <div>
+                        <Label className="font-body text-xs text-muted-foreground">{ob.maxTemp as string}</Label>
+                        <Input
+                          type="number"
+                          value={maxTemp}
+                          onChange={(e) => setMaxTemp(e.target.value)}
+                          placeholder="35"
+                          className="mt-1 font-body"
+                        />
+                        <p className="text-[10px] text-muted-foreground font-body mt-1">{ob.maxTempHint as string}</p>
+                      </div>
                     </div>
-                    <Switch checked={hasValleyEffect} onCheckedChange={setHasValleyEffect} />
                   </div>
                 </div>
               </motion.div>

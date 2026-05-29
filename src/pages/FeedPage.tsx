@@ -7,13 +7,22 @@ import { useFeed } from "@/hooks/useFeed";
 import { format } from "date-fns";
 import { es as esLocale, enUS } from "date-fns/locale";
 import { categoryEmoji } from "@/hooks/useNativePlants";
+import {
+  IllustrationVariedad,
+  IllustrationHuerto,
+  IllustrationComunidad,
+  IllustrationReceta,
+  IllustrationCalendario,
+  IllustrationNativa,
+} from "@/components/illustrations/FeedIllustrations";
+import { useHerbario } from "@/hooks/useHerbario";
 
 // ─── Skeleton ────────────────────────────────────────────────
 
 const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
   <motion.div
     className="rounded-2xl bg-muted animate-pulse"
-    style={{ height: "172px" }}
+    style={{ height: "220px" }}
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ delay }}
@@ -28,6 +37,7 @@ interface CardProps {
   image?: string | null;
   bgClass: string;
   emojiBg?: string;
+  illustration?: React.ReactNode;
   categoryLabel: string;
   categoryClass: string;
   icon: LucideIcon;
@@ -42,6 +52,7 @@ const MagCard = ({
   image,
   bgClass,
   emojiBg,
+  illustration,
   categoryLabel,
   categoryClass,
   icon: Icon,
@@ -54,7 +65,7 @@ const MagCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay }}
     className="rounded-2xl overflow-hidden relative"
-    style={{ height: "172px" }}
+    style={{ height: "220px" }}
   >
     <Link to={to} state={state} className="absolute inset-0 block group">
       {/* Background */}
@@ -65,10 +76,12 @@ const MagCard = ({
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className={`absolute inset-0 ${bgClass} flex items-center justify-center`}>
-          {emojiBg && (
-            <span className="text-6xl opacity-20 select-none">{emojiBg}</span>
-          )}
+        <div className={`absolute inset-0 ${bgClass} overflow-hidden`}>
+          {illustration ?? (emojiBg && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-7xl opacity-20 select-none">{emojiBg}</span>
+            </div>
+          ))}
         </div>
       )}
 
@@ -78,19 +91,19 @@ const MagCard = ({
       )}
 
       {/* Category badge */}
-      <div className="absolute top-2.5 left-2.5">
+      <div className="absolute top-3 left-3">
         <span
-          className={`inline-flex items-center gap-1 text-[9px] font-body font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${categoryClass}`}
+          className={`inline-flex items-center gap-1 text-[11px] font-body font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${categoryClass}`}
         >
-          <Icon className="w-2.5 h-2.5" />
+          <Icon className="w-3 h-3" />
           {categoryLabel}
         </span>
       </div>
 
       {/* Text content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3">
+      <div className="absolute bottom-0 left-0 right-0 p-4">
         <p
-          className={`font-display font-bold text-sm leading-snug line-clamp-2 ${
+          className={`font-display font-bold text-base leading-snug line-clamp-2 ${
             image ? "text-white" : "text-foreground"
           }`}
         >
@@ -98,8 +111,8 @@ const MagCard = ({
         </p>
         {subtitle && (
           <p
-            className={`font-body text-xs mt-0.5 line-clamp-1 ${
-              image ? "text-white/70" : "text-muted-foreground"
+            className={`font-body text-sm mt-1 line-clamp-1 ${
+              image ? "text-white/75" : "text-muted-foreground"
             }`}
           >
             {subtitle}
@@ -112,11 +125,24 @@ const MagCard = ({
 
 // ─── Page ─────────────────────────────────────────────────────
 
+const taskCategoryImage: Record<string, string> = {
+  siembra:       "/illustrations/seedlings.jpg",
+  cosecha:       "/illustrations/pear-seeds.jpg",
+  riego:         "/illustrations/maidenhair-fern.jpg",
+  compost:       "/illustrations/red-mushrooms.jpg",
+  general:       "/illustrations/delicate-plant.jpg",
+  suelo:         "/illustrations/soil-layers.jpg",
+  poda:          "/illustrations/garden-tools.jpg",
+  plagas:        "/illustrations/dandelion.jpg",
+  planificación: "/illustrations/moon-branches.jpg",
+};
+
 const FeedPage = () => {
   const { profile } = useProfile();
   const { lang } = useLanguage();
   const { latestVariety, popularPhoto, popularRecipe, seasonTask, nativePlant, myPhoto, loading } =
     useFeed();
+  const { count: herbarioCount } = useHerbario();
 
   const dateLocale = lang === "en" ? enUS : esLocale;
   const today = format(
@@ -164,10 +190,10 @@ const FeedPage = () => {
             {latestVariety ? (
               <MagCard
                 to="/variedades"
-                image={latestVariety.image_url}
+                image={latestVariety.image_url || latestVariety.image_url_2 || latestVariety.image_url_3}
                 bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
                 emojiBg="🌱"
-                categoryLabel={es("Nueva variedad", "New variety")}
+                categoryLabel={es("Herbario", "Herbarium")}
                 categoryClass="bg-primary/90 text-primary-foreground"
                 icon={Sprout}
                 title={latestVariety.name}
@@ -177,9 +203,9 @@ const FeedPage = () => {
             ) : (
               <MagCard
                 to="/variedades"
-                bgClass="bg-gradient-to-br from-primary/10 to-leaf-light/30"
-                emojiBg="🌱"
-                categoryLabel={es("Semillero", "Seeds")}
+                image="/illustrations/nasturtium.jpg"
+                bgClass="bg-[#FAFAF8]"
+                categoryLabel={es("Herbario", "Herbarium")}
                 categoryClass="bg-primary/90 text-primary-foreground"
                 icon={Sprout}
                 title={es("¡Agrega tu primera variedad!", "Add your first variety!")}
@@ -190,9 +216,8 @@ const FeedPage = () => {
             {/* 2 — Tu huerto */}
             <MagCard
               to="/bitacora"
-              image={myPhoto}
-              bgClass="bg-gradient-to-br from-secondary/80 to-muted"
-              emojiBg="🏡"
+              image={myPhoto || "/illustrations/willow-pattern.jpg"}
+              bgClass="bg-[#FAFAF8]"
               categoryLabel={es("Mi huerto", "My garden")}
               categoryClass="bg-earth/80 text-white"
               icon={Sprout}
@@ -201,7 +226,11 @@ const FeedPage = () => {
                   ? `${es("Hola", "Hello")}, ${profile.display_name.split(" ")[0]}`
                   : es("¡Bienvenida!", "Welcome!")
               }
-              subtitle={profile?.city || es("Sin ubicación", "No location set")}
+              subtitle={
+                herbarioCount > 0
+                  ? es(`${herbarioCount} variedad${herbarioCount === 1 ? "" : "es"} guardada${herbarioCount === 1 ? "" : "s"}`, `${herbarioCount} saved variet${herbarioCount === 1 ? "y" : "ies"}`)
+                  : profile?.city || es("Sin ubicación", "No location set")
+              }
               delay={0.1}
             />
 
@@ -222,8 +251,8 @@ const FeedPage = () => {
             ) : (
               <MagCard
                 to="/comunidad"
-                bgClass="bg-gradient-to-br from-blue-100 to-sky-50"
-                emojiBg="📸"
+                image="/illustrations/passionflower.jpg"
+                bgClass="bg-[#FAFAF8]"
                 categoryLabel={es("Comunidad", "Community")}
                 categoryClass="bg-sky-600/90 text-white"
                 icon={Camera}
@@ -239,7 +268,7 @@ const FeedPage = () => {
                 image={popularRecipe.image_url}
                 bgClass="bg-gradient-to-br from-orange-100 to-amber-50"
                 emojiBg="🍳"
-                categoryLabel={es("Receta", "Recipe")}
+                categoryLabel={es("Comunidad", "Community")}
                 categoryClass="bg-orange-500/90 text-white"
                 icon={ChefHat}
                 title={popularRecipe.title}
@@ -249,12 +278,12 @@ const FeedPage = () => {
             ) : (
               <MagCard
                 to="/comunidad"
-                bgClass="bg-gradient-to-br from-orange-100 to-amber-50"
-                emojiBg="🍳"
-                categoryLabel={es("Receta", "Recipe")}
+                image="/illustrations/garcinia-fruit.jpg"
+                bgClass="bg-[#FAFAF8]"
+                categoryLabel={es("Comunidad", "Community")}
                 categoryClass="bg-orange-500/90 text-white"
                 icon={ChefHat}
-                title={es("¡Comparte una receta de temporada!", "Share a seasonal recipe!")}
+                title={es("¡Comparte con otros huerteros!", "Share with other gardeners!")}
                 delay={0.2}
               />
             )}
@@ -263,8 +292,8 @@ const FeedPage = () => {
             {seasonTask ? (
               <MagCard
                 to="/tareas"
-                bgClass="bg-gradient-to-br from-violet-100/80 to-purple-50"
-                emojiBg={seasonTask.emoji}
+                bgClass="bg-[#FAFAF8]"
+                image={taskCategoryImage[seasonTask.category] || "/illustrations/moon-branches.jpg"}
                 categoryLabel={es("Este mes", "This month")}
                 categoryClass="bg-violet-600/90 text-white"
                 icon={CalendarDays}
@@ -275,8 +304,8 @@ const FeedPage = () => {
             ) : (
               <MagCard
                 to="/tareas"
-                bgClass="bg-gradient-to-br from-violet-100/80 to-purple-50"
-                emojiBg="🌙"
+                bgClass="bg-[#FAFAF8]"
+                image="/illustrations/moon-branches.jpg"
                 categoryLabel={es("Calendario", "Calendar")}
                 categoryClass="bg-violet-600/90 text-white"
                 icon={CalendarDays}
@@ -308,8 +337,8 @@ const FeedPage = () => {
               <MagCard
                 to="/semillero"
                 state={{ tab: "native" }}
-                bgClass="bg-gradient-to-br from-emerald-100 to-green-50"
-                emojiBg="🌳"
+                image="/illustrations/maidenhair-fern.jpg"
+                bgClass="bg-[#FAFAF8]"
                 categoryLabel={es("Planta nativa", "Native plant")}
                 categoryClass="bg-emerald-700/90 text-white"
                 icon={TreePine}

@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Sprout, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sprout, ChevronLeft, ChevronRight, X, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { plants, type PlantCategory } from "@/data/plants";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useHerbario } from "@/hooks/useHerbario";
 
 const CATALOG_CATEGORIES: { value: PlantCategory | "all"; label: { es: string; en: string } }[] = [
   { value: "all",          label: { es: "Todas",       en: "All" } },
@@ -57,9 +59,12 @@ const VariedadesPage = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<VarietyCard | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const [catalogCategory, setCatalogCategory] = useState<PlantCategory | "all">("all");
   const [catalogSearch, setCatalogSearch] = useState("");
+
+  const { savedIds, toggle: toggleHerbario } = useHerbario();
 
   const es = (spa: string, en: string) => (lang === "en" ? en : spa);
 
@@ -149,6 +154,8 @@ const VariedadesPage = () => {
           <div className="grid grid-cols-2 gap-3">
             {varieties.map((v, i) => {
               const plant = getPlant(v.plant_scientific_name);
+              // Usar la primera foto disponible (cualquiera de los 3 slots)
+              const cardPhoto = v.image_url || v.image_url_2 || v.image_url_3;
               return (
                 <motion.div
                   key={v.id}
@@ -160,9 +167,9 @@ const VariedadesPage = () => {
                   onClick={() => openVariety(v)}
                 >
                   {/* Fondo */}
-                  {v.image_url ? (
+                  {cardPhoto ? (
                     <img
-                      src={v.image_url}
+                      src={cardPhoto}
                       alt={v.name}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -175,7 +182,7 @@ const VariedadesPage = () => {
                   )}
 
                   {/* Gradiente */}
-                  {v.image_url && (
+                  {cardPhoto && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                   )}
 
@@ -187,11 +194,24 @@ const VariedadesPage = () => {
                     </span>
                   </div>
 
+                  {/* Botón herbario */}
+                  <button
+                    className={`absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm transition-colors ${
+                      savedIds.has(v.id)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-black/30 text-white hover:bg-primary hover:text-primary-foreground"
+                    }`}
+                    onClick={(e) => { e.stopPropagation(); toggleHerbario(v.id); }}
+                    title={savedIds.has(v.id) ? es("Quitar del herbario", "Remove from herbarium") : es("Agregar al herbario", "Add to herbarium")}
+                  >
+                    <Bookmark className={`w-3.5 h-3.5 ${savedIds.has(v.id) ? "fill-current" : ""}`} />
+                  </button>
+
                   {/* Nombre */}
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p
                       className={`font-display font-bold text-sm leading-snug line-clamp-2 ${
-                        v.image_url ? "text-white" : "text-foreground"
+                        cardPhoto ? "text-white" : "text-foreground"
                       }`}
                     >
                       {v.name}
@@ -199,7 +219,7 @@ const VariedadesPage = () => {
                     {v.color && (
                       <p
                         className={`font-body text-xs mt-0.5 line-clamp-1 ${
-                          v.image_url ? "text-white/70" : "text-muted-foreground"
+                          cardPhoto ? "text-white/70" : "text-muted-foreground"
                         }`}
                       >
                         {v.color}
@@ -290,7 +310,7 @@ const VariedadesPage = () => {
       <Dialog
         open={!!selected}
         onOpenChange={(open) => {
-          if (!open) { setSelected(null); setPhotoIndex(0); }
+          if (!open) { setSelected(null); setPhotoIndex(0); setLightboxOpen(false); }
         }}
       >
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
@@ -314,7 +334,10 @@ const VariedadesPage = () => {
                 {/* Fotos */}
                 {photos.length > 0 && (
                   <div>
-                    <div className="aspect-video rounded-xl overflow-hidden bg-muted/20">
+                    <div
+                      className="aspect-video rounded-xl overflow-hidden bg-muted/20 cursor-zoom-in"
+                      onClick={() => setLightboxOpen(true)}
+                    >
                       <img
                         src={photos[photoIndex]}
                         alt={selected.name}
@@ -388,6 +411,21 @@ const VariedadesPage = () => {
                   </p>
                 )}
 
+                {/* Botón herbario */}
+                <button
+                  onClick={() => toggleHerbario(selected.id)}
+                  className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors ${
+                    savedIds.has(selected.id)
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border border-primary/30 text-primary hover:bg-primary/5"
+                  }`}
+                >
+                  <Bookmark className={`w-4 h-4 ${savedIds.has(selected.id) ? "fill-current" : ""}`} />
+                  {savedIds.has(selected.id)
+                    ? es("✓ En tu herbario", "✓ In your herbarium")
+                    : es("Guardar en mi herbario", "Save to my herbarium")}
+                </button>
+
                 {/* Link al semillero */}
                 <Link
                   to="/semillero"
@@ -405,6 +443,73 @@ const VariedadesPage = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Lightbox */}
+      {lightboxOpen && selected && createPortal(
+        (() => {
+          const lbPhotos = [selected.image_url, selected.image_url_2, selected.image_url_3].filter(Boolean) as string[];
+          return (
+            <div
+              className="fixed inset-0 flex items-center justify-center"
+              style={{ zIndex: 9999, background: "rgba(0,0,0,0.95)" }}
+              onClick={() => setLightboxOpen(false)}
+            >
+              {/* Cerrar */}
+              <button
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                style={{ zIndex: 10000 }}
+                onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Prev / Next */}
+              {lbPhotos.length > 1 && (
+                <>
+                  <button
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                    style={{ zIndex: 10000 }}
+                    onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => (p - 1 + lbPhotos.length) % lbPhotos.length); }}
+                  >
+                    <ChevronLeft className="w-7 h-7" />
+                  </button>
+                  <button
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                    style={{ zIndex: 10000 }}
+                    onClick={(e) => { e.stopPropagation(); setPhotoIndex((p) => (p + 1) % lbPhotos.length); }}
+                  >
+                    <ChevronRight className="w-7 h-7" />
+                  </button>
+                </>
+              )}
+
+              {/* Imagen */}
+              <img
+                src={lbPhotos[photoIndex] ?? lbPhotos[0]}
+                alt={selected.name}
+                className="max-w-full max-h-full object-contain select-none"
+                style={{ padding: "3rem" }}
+                onClick={(e) => e.stopPropagation()}
+              />
+
+              {/* Dots */}
+              {lbPhotos.length > 1 && (
+                <div className="absolute bottom-6 flex gap-2">
+                  {lbPhotos.map((_, i) => (
+                    <button
+                      key={i}
+                      style={{ zIndex: 10000 }}
+                      onClick={(e) => { e.stopPropagation(); setPhotoIndex(i); }}
+                      className={`w-2.5 h-2.5 rounded-full transition-colors ${i === photoIndex ? "bg-white" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })(),
+        document.body
+      )}
     </div>
   );
 };

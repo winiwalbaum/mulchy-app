@@ -43,8 +43,16 @@ export const useWeather = () => {
       setLoading(true);
       setError(null);
       try {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather?lat=${profile.latitude}&lon=${profile.longitude}`;
-        
+        const params = new URLSearchParams({
+          lat: String(profile.latitude),
+          lon: String(profile.longitude),
+        });
+        if (profile.min_temp != null) params.set('min_temp', String(profile.min_temp));
+        if (profile.max_temp != null) params.set('max_temp', String(profile.max_temp));
+        if (profile.wind_exposure) params.set('frost_type', profile.wind_exposure);
+
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather?${params.toString()}`;
+
         const res = await fetch(url, {
           headers: {
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -66,7 +74,7 @@ export const useWeather = () => {
     };
 
     fetchWeather();
-  }, [profile?.latitude, profile?.longitude]);
+  }, [profile?.latitude, profile?.longitude, profile?.min_temp, profile?.max_temp, profile?.wind_exposure]);
 
   return { weather, loading, error };
 };

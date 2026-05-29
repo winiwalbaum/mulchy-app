@@ -1,12 +1,33 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { gardenTasks, seasonConfig, taskCategories, type Season } from "@/data/gardenTasks";
+import { gardenTasks, seasonConfig, taskCategories, type Season, type GardenTask } from "@/data/gardenTasks";
 import { ExternalLink, Leaf, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import LunarCalendarWidget from "@/components/LunarCalendarWidget";
 import { useProfile } from "@/hooks/useProfile";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+// ── Mapeo categoría → imagen botánica ────────────────────────────────────────
+const categoryImage: Record<GardenTask["category"], string> = {
+  siembra:       "/illustrations/seedlings.jpg",
+  cosecha:       "/illustrations/pear-seeds.jpg",
+  riego:         "/illustrations/maidenhair-fern.jpg",
+  compost:       "/illustrations/red-mushrooms.jpg",
+  general:       "/illustrations/delicate-plant.jpg",
+  suelo:         "/illustrations/soil-layers.jpg",
+  poda:          "/illustrations/garden-tools.jpg",
+  plagas:        "/illustrations/dandelion.jpg",
+  planificación: "/illustrations/moon-branches.jpg",
+};
+
+// ── Fondo por estación (header band) ──────────────────────────────────────────
+const seasonBand: Record<Season, string> = {
+  otoño:     "bg-amber-50",
+  invierno:  "bg-sky-50",
+  primavera: "bg-green-50",
+  verano:    "bg-yellow-50",
+};
 
 const seasonMonths: Record<Season, number[]> = {
   otoño: [3, 4, 5],
@@ -112,26 +133,41 @@ const TareasPage = () => {
               ? task.months.map(m => monthNames[m - 1].slice(0, 3)).join(", ")
               : l(cfg.months, cfg.months_en);
             return (
-              <motion.div key={task.id} className="bg-card rounded-xl p-5 shadow-soft border border-border/50" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.4) }}>
-                <div className="flex items-start gap-3 mb-2">
-                  <span className="text-2xl">{task.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base">{title}</h3>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full border ${cfg.color}`}>
-                        {cfg.emoji} {seasonLabel}
-                      </span>
-                      <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        📅 {monthLabel}
-                      </span>
-                    </div>
+              <motion.div key={task.id} className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.4) }}>
+                {/* Banda ilustrada superior */}
+                <div className="relative h-[96px] overflow-hidden">
+                  <img
+                    src={categoryImage[task.category]}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {/* Gradient para legibilidad del texto */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                  {/* Badge estación */}
+                  <div className="absolute bottom-2 left-3">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-body font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/30 text-white backdrop-blur-sm">
+                      {cfg.emoji} {seasonLabel}
+                    </span>
+                  </div>
+                  {/* Emoji tarea — esquina derecha */}
+                  <div className="absolute top-2 right-3 text-2xl drop-shadow-sm select-none">
+                    {task.emoji}
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground font-body mt-2 leading-relaxed">{description}</p>
-                <a href={task.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-xs text-primary hover:underline font-body">
-                  <ExternalLink className="w-3 h-3" />
-                  {task.sourceName}
-                </a>
+                {/* Contenido */}
+                <div className="p-4 pt-3">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <h3 className="font-semibold text-sm leading-snug flex-1">{title}</h3>
+                    <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-body shrink-0">
+                      📅 {monthLabel}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground font-body leading-relaxed">{description}</p>
+                  <a href={task.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-xs text-primary hover:underline font-body">
+                    <ExternalLink className="w-3 h-3" />
+                    {task.sourceName}
+                  </a>
+                </div>
               </motion.div>
             );
           })}

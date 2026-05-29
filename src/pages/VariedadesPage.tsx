@@ -2,14 +2,26 @@ import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sprout, ChevronLeft, ChevronRight, X, Bookmark } from "lucide-react";
+import { ArrowLeft, Sprout, ChevronLeft, ChevronRight, X, Bookmark, TreePine } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { plants, type PlantCategory } from "@/data/plants";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useHerbario } from "@/hooks/useHerbario";
+import { useNativeHerbario } from "@/hooks/useNativeHerbario";
 import { useAuth } from "@/contexts/AuthContext";
+import { categoryEmoji, categoryLabels } from "@/hooks/useNativePlants";
+
+interface NativePlantCard {
+  id: string;
+  common_name: string | null;
+  common_name_en: string | null;
+  scientific_name: string;
+  category: string;
+  image_url: string | null;
+  observation_count: number;
+}
 
 const CATALOG_CATEGORIES: { value: PlantCategory | "all"; label: { es: string; en: string } }[] = [
   { value: "all",          label: { es: "Todas",       en: "All" } },
@@ -67,6 +79,10 @@ const VariedadesPage = () => {
   const [catalogSearch, setCatalogSearch] = useState("");
 
   const { savedIds, toggle: toggleHerbario } = useHerbario();
+  const { toggle: toggleNative } = useNativeHerbario();
+  const [nativePlants, setNativePlants] = useState<NativePlantCard[]>([]);
+  const [nativeLoading, setNativeLoading] = useState(true);
+  const [selectedNative, setSelectedNative] = useState<NativePlantCard | null>(null);
 
   const es = (spa: string, en: string) => (lang === "en" ? en : spa);
 
@@ -115,6 +131,28 @@ const VariedadesPage = () => {
     fetchVarieties();
   }, [user?.id]);
 
+  useEffect(() => {
+    const fetchNatives = async () => {
+      if (!user) { setNativeLoading(false); return; }
+      const { data: rows } = await supabase
+        .from("user_native_plants")
+        .select("native_plant_id")
+        .eq("user_id", user.id);
+
+      if (!rows || rows.length === 0) { setNativePlants([]); setNativeLoading(false); return; }
+
+      const ids = rows.map((r: any) => r.native_plant_id);
+      const { data } = await supabase
+        .from("native_plants_cache")
+        .select("id, common_name, common_name_en, scientific_name, category, image_url, observation_count")
+        .in("id", ids);
+
+      setNativePlants(data || []);
+      setNativeLoading(false);
+    };
+    fetchNatives();
+  }, [user?.id]);
+
   const getPlant = (scientificName: string | null) =>
     scientificName ? plants.find((p) => p.scientificName === scientificName) : null;
 
@@ -144,34 +182,35 @@ const VariedadesPage = () => {
 
       {/* Grid */}
       <div className="px-4 pt-5 pb-4 max-w-lg mx-auto">
-        {loading ? (
+        {loading && nativeLoading ? (
           <div className="grid grid-cols-2 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} delay={i * 0.05} />
             ))}
           </div>
-        ) : varieties.length === 0 ? (
-          <div className="text-center py-20">
-            <Sprout className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+        ) : varieties.length === 0 && nativePlants.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="flex justify-center gap-3 mb-4 opacity-30">
+              <Sprout className="w-8 h-8 text-muted-foreground" />
+              <TreePine className="w-8 h-8 text-muted-foreground" />
+            </div>
             <p className="text-muted-foreground font-body text-sm">
+              {es("Aún no tienes plantas guardadas.", "You haven't saved any plants yet.")}
+            </p>
+            <p className="text-xs text-muted-foreground font-body mt-1 mb-5">
               {es(
-                "Aún no tienes variedades guardadas.",
-                "You haven't saved any varieties yet."
+                "Guarda variedades desde el Semillero 🔖 o plantas nativas desde la Biblioteca 🌿",
+                "Save varieties from the Seed Library 🔖 or native plants from the Library 🌿"
               )}
             </p>
-            <p className="text-xs text-muted-foreground font-body mt-1 mb-4">
-              {es(
-                "Guarda variedades desde el Semillero tocando 🔖",
-                "Save varieties from the Seed Library by tapping 🔖"
-              )}
-            </p>
-            <Link
-              to="/semillero"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-body text-sm font-medium"
-            >
-              <Sprout className="w-4 h-4" />
-              {es("Ir al Semillero", "Go to Seed Library")}
-            </Link>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <Link to="/semillero" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-body text-sm font-medium">
+                <Sprout className="w-4 h-4" /> {es("Semillero", "Seed Library")}
+              </Link>
+              <Link to="/biblioteca" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border font-body text-sm font-medium">
+                <TreePine className="w-4 h-4" /> {es("Biblioteca", "Library")}
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -252,6 +291,89 @@ const VariedadesPage = () => {
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Plantas nativas guardadas ── */}
+        {nativePlants.length > 0 && (
+          <div className="mt-6">
+            {varieties.length > 0 && (
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-1 h-px bg-border" />
+                <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-widest shrink-0 flex items-center gap-1.5">
+                  <TreePine className="w-3.5 h-3.5" />
+                  {es("Plantas nativas", "Native plants")}
+                </h2>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {nativePlants.map((np, i) => {
+                const name = lang === "en"
+                  ? np.common_name_en || np.common_name || np.scientific_name
+                  : np.common_name || np.scientific_name;
+                const emoji = categoryEmoji[np.category] || "🍃";
+                const catLabel = categoryLabels[np.category]?.[lang === "en" ? "en" : "es"] || np.category;
+                return (
+                  <motion.div
+                    key={np.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: Math.min(i * 0.04, 0.4) }}
+                    className="rounded-2xl overflow-hidden relative cursor-pointer group"
+                    style={{ height: "172px" }}
+                    onClick={() => setSelectedNative(np)}
+                  >
+                    {/* Fondo */}
+                    {np.image_url ? (
+                      <img
+                        src={np.image_url}
+                        alt={name}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-green-50 flex items-center justify-center">
+                        <span className="text-6xl opacity-20 select-none">{emoji}</span>
+                      </div>
+                    )}
+                    {np.image_url && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                    )}
+
+                    {/* Badge */}
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-body font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-700/90 text-white">
+                        <TreePine className="w-2.5 h-2.5" />
+                        {catLabel}
+                      </span>
+                    </div>
+
+                    {/* Quitar */}
+                    <button
+                      className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm bg-emerald-700/90 text-white transition-colors hover:bg-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleNative(np.id);
+                        setNativePlants((prev) => prev.filter((p) => p.id !== np.id));
+                      }}
+                      title={es("Quitar de mis plantas", "Remove from my plants")}
+                    >
+                      <Bookmark className="w-3.5 h-3.5 fill-current" />
+                    </button>
+
+                    {/* Nombre */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className={`font-display font-bold text-sm leading-snug line-clamp-2 ${np.image_url ? "text-white" : "text-foreground"}`}>
+                        {name}
+                      </p>
+                      <p className={`font-body text-xs mt-0.5 italic line-clamp-1 ${np.image_url ? "text-white/70" : "text-muted-foreground"}`}>
+                        {np.scientific_name}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>{/* /Grid */}
@@ -458,6 +580,63 @@ const VariedadesPage = () => {
                 >
                   <Sprout className="w-4 h-4" />
                   {es("Ver ficha completa →", "See full variety sheet →")}
+                </Link>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Diálogo planta nativa ── */}
+      <Dialog open={!!selectedNative} onOpenChange={(open) => { if (!open) setSelectedNative(null); }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="sr-only">{selectedNative?.scientific_name}</DialogTitle>
+          </DialogHeader>
+          {selectedNative && (() => {
+            const name = lang === "en"
+              ? selectedNative.common_name_en || selectedNative.common_name || selectedNative.scientific_name
+              : selectedNative.common_name || selectedNative.scientific_name;
+            const emoji = categoryEmoji[selectedNative.category] || "🍃";
+            const catLabel = categoryLabels[selectedNative.category]?.[lang === "en" ? "en" : "es"] || selectedNative.category;
+            return (
+              <div className="space-y-4">
+                {selectedNative.image_url && (
+                  <div className="rounded-xl overflow-hidden">
+                    <img src={selectedNative.image_url} alt={name} className="w-full h-52 object-cover" />
+                  </div>
+                )}
+                <div className="flex items-start gap-3">
+                  <span className="text-4xl">{emoji}</span>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-display font-bold capitalize">{name}</h2>
+                    <p className="text-sm text-muted-foreground font-body italic">{selectedNative.scientific_name}</p>
+                    <span className="inline-flex items-center gap-1 text-xs font-body mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      <TreePine className="w-3 h-3" /> {catLabel}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground font-body">
+                  {selectedNative.observation_count.toLocaleString()} {es("observaciones en iNaturalist", "observations on iNaturalist")}
+                </p>
+                <button
+                  onClick={() => {
+                    toggleNative(selectedNative.id);
+                    setNativePlants((prev) => prev.filter((p) => p.id !== selectedNative.id));
+                    setSelectedNative(null);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors border border-destructive/30 text-destructive hover:bg-destructive/5"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  {es("Quitar de mis plantas", "Remove from my plants")}
+                </button>
+                <Link
+                  to="/biblioteca"
+                  state={{ tab: "native", openPlant: selectedNative.id }}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-primary/30 text-primary font-body text-sm font-medium hover:bg-primary/5 transition-colors"
+                >
+                  <TreePine className="w-4 h-4" />
+                  {es("Ver en Biblioteca →", "View in Library →")}
                 </Link>
               </div>
             );

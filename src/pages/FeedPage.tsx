@@ -186,34 +186,7 @@ const FeedPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {/* 1 — Última variedad */}
-            {latestVariety ? (
-              <MagCard
-                to="/variedades"
-                image={latestVariety.image_url || latestVariety.image_url_2 || latestVariety.image_url_3}
-                bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
-                emojiBg="🌱"
-                categoryLabel={es("Herbario", "Herbarium")}
-                categoryClass="bg-primary/90 text-primary-foreground"
-                icon={Sprout}
-                title={latestVariety.name}
-                subtitle={latestVariety.plant_scientific_name}
-                delay={0.05}
-              />
-            ) : (
-              <MagCard
-                to="/variedades"
-                image="/illustrations/nasturtium.jpg"
-                bgClass="bg-[#FAFAF8]"
-                categoryLabel={es("Herbario", "Herbarium")}
-                categoryClass="bg-primary/90 text-primary-foreground"
-                icon={Sprout}
-                title={es("¡Agrega tu primera variedad!", "Add your first variety!")}
-                delay={0.05}
-              />
-            )}
-
-            {/* 2 — Tu huerto */}
+            {/* 1 — Mi huerto */}
             <MagCard
               to="/bitacora"
               image={myPhoto || "/illustrations/willow-pattern.jpg"}
@@ -231,8 +204,35 @@ const FeedPage = () => {
                   ? es(`${herbarioCount} variedad${herbarioCount === 1 ? "" : "es"} guardada${herbarioCount === 1 ? "" : "s"}`, `${herbarioCount} saved variet${herbarioCount === 1 ? "y" : "ies"}`)
                   : profile?.city || es("Sin ubicación", "No location set")
               }
-              delay={0.1}
+              delay={0.05}
             />
+
+            {/* 2 — Herbario */}
+            {latestVariety ? (
+              <MagCard
+                to="/variedades"
+                image={latestVariety.image_url || latestVariety.image_url_2 || latestVariety.image_url_3}
+                bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
+                emojiBg="🌱"
+                categoryLabel={es("Herbario", "Herbarium")}
+                categoryClass="bg-primary/90 text-primary-foreground"
+                icon={Sprout}
+                title={latestVariety.name}
+                subtitle={latestVariety.plant_scientific_name}
+                delay={0.1}
+              />
+            ) : (
+              <MagCard
+                to="/variedades"
+                image="/illustrations/nasturtium.jpg"
+                bgClass="bg-[#FAFAF8]"
+                categoryLabel={es("Herbario", "Herbarium")}
+                categoryClass="bg-primary/90 text-primary-foreground"
+                icon={Sprout}
+                title={es("¡Agrega tu primera variedad!", "Add your first variety!")}
+                delay={0.1}
+              />
+            )}
 
             {/* 3 — Foto popular */}
             {popularPhoto ? (

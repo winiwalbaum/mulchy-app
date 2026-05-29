@@ -142,6 +142,7 @@ const BitacoraPage = () => {
   const [shareEntry, setShareEntry] = useState<JournalEntry | null>(null);
   const [shareTitle, setShareTitle] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null);
   const [savedPosts, setSavedPosts] = useState<any[]>(() => {
     try {
       const data = JSON.parse(localStorage.getItem("mulchii-saved-posts") || "{}");
@@ -186,7 +187,7 @@ const BitacoraPage = () => {
     supabase
       .from("varieties")
       .select("id", { count: "exact", head: true })
-      .eq("created_by", user.id)
+      .eq("user_id", user.id)
       .then(({ count }) => setMyVarietiesCount(count || 0));
   }, [user?.id]);
 
@@ -428,30 +429,30 @@ const BitacoraPage = () => {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex flex-wrap items-center gap-2 mt-3">
                   <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" onClick={() => cameraInputRef.current?.click()} className="gap-1.5" disabled={uploading}>
                     <Camera className="w-4 h-4" />
-                    <span className="hidden sm:inline">{b.takePhoto}</span>
+                    {b.takePhoto}
                   </Button>
 
                   <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" onClick={() => galleryInputRef.current?.click()} className="gap-1.5" disabled={uploading}>
                     <ImagePlus className="w-4 h-4" />
-                    <span className="hidden sm:inline">{b.choosePhoto}</span>
+                    {b.choosePhoto}
                   </Button>
 
-                  <div className="flex-1" />
+                  <div className="flex gap-2 ml-auto">
+                    <Button variant="outline" size="sm" onClick={() => addEntry("private")} disabled={(!newNote.trim() && !photoFile) || uploading} className="gap-1">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      {b.onlyForMe}
+                    </Button>
 
-                  <Button variant="outline" size="sm" onClick={() => addEntry("private")} disabled={(!newNote.trim() && !photoFile) || uploading} className="gap-1">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                    {b.onlyForMe}
-                  </Button>
-
-                  <Button variant="default" size="sm" onClick={() => addEntry("community")} disabled={(!newNote.trim() && !photoFile) || uploading} className="gap-1">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                    {b.forCommunity}
-                  </Button>
+                    <Button variant="default" size="sm" onClick={() => addEntry("community")} disabled={(!newNote.trim() && !photoFile) || uploading} className="gap-1">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                      {b.forCommunity}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -473,27 +474,31 @@ const BitacoraPage = () => {
                   transition={{ duration: 0.3, delay: Math.min(i * 0.05, 0.5) }}
                 >
                   <div className="bg-white rounded-sm shadow-card hover:shadow-elevated transition-shadow border border-gray-200 overflow-hidden">
-                    <div className="aspect-square overflow-hidden relative bg-gradient-to-br from-leaf-light/30 via-leaf-light/10 to-cream flex items-center justify-center">
-                      {entry.image_url ? (
-                        <img src={entry.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                      ) : (
-                        <span className="text-5xl select-none">🌱</span>
-                      )}
-                      <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => { setShareEntry(entry); setShareTitle(""); }} className="w-6 h-6 rounded bg-white/85 flex items-center justify-center text-gray-600 hover:text-primary shadow-sm" title={b.shareToComm}>
-                          <Share2 className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => removeEntry(entry)} className="w-6 h-6 rounded bg-white/85 flex items-center justify-center text-gray-600 hover:text-destructive shadow-sm">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                    {/* Área clickeable → abre la entrada */}
+                    <button className="w-full text-left" onClick={() => setViewEntry(entry)}>
+                      <div className="aspect-square overflow-hidden relative bg-gradient-to-br from-leaf-light/30 via-leaf-light/10 to-cream flex items-center justify-center">
+                        {entry.image_url ? (
+                          <img src={entry.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                        ) : (
+                          <span className="text-5xl select-none">🌱</span>
+                        )}
                       </div>
-                    </div>
-                    <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
-                      <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHII®</p>
-                      {entry.text && <p className="font-body text-[10px] leading-relaxed line-clamp-3 text-gray-800 mb-0.5">{entry.text}</p>}
-                      <p className="text-[8px] text-gray-400 font-body">
-                        {new Date(entry.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-CL", { day: "numeric", month: "short" })}
-                      </p>
+                      <div className="bg-white px-2 pt-1.5 pb-1 border-t border-gray-100">
+                        <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase mb-0.5">MULCHII®</p>
+                        {entry.text && <p className="font-body text-[10px] leading-relaxed line-clamp-3 text-gray-800 mb-0.5">{entry.text}</p>}
+                        <p className="text-[8px] text-gray-400 font-body">
+                          {new Date(entry.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-CL", { day: "numeric", month: "short" })}
+                        </p>
+                      </div>
+                    </button>
+                    {/* Acciones rápidas */}
+                    <div className="flex items-center gap-1 px-2 pb-2 pt-0.5 bg-white">
+                      <button onClick={() => { setShareEntry(entry); setShareTitle(""); }} className="flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-primary transition-colors" title={b.shareToComm}>
+                        <Share2 className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => removeEntry(entry)} className="flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-destructive transition-colors ml-auto">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -571,6 +576,42 @@ const BitacoraPage = () => {
             <Button onClick={handleShare} disabled={!shareTitle.trim() || sharing} className="gap-1.5">
               {sharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               {b.shareConfirm}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Vista de entrada ── */}
+      <Dialog open={!!viewEntry} onOpenChange={(open) => !open && setViewEntry(null)}>
+        <DialogContent className="sm:max-w-lg p-0 max-h-[92vh] flex flex-col overflow-hidden gap-0">
+          {viewEntry?.image_url && (
+            <div className="w-full bg-black flex items-center justify-center shrink-0" style={{ maxHeight: "55vh" }}>
+              <img
+                src={viewEntry.image_url}
+                alt=""
+                className="w-full h-auto object-contain"
+                style={{ maxHeight: "55vh" }}
+              />
+            </div>
+          )}
+          <div className="px-5 py-4 flex-1 overflow-y-auto">
+            {viewEntry?.text && (
+              <p className="font-body text-base text-foreground leading-relaxed mb-3">{viewEntry.text}</p>
+            )}
+            <p className="text-xs text-muted-foreground font-body">
+              {viewEntry && new Date(viewEntry.created_at).toLocaleDateString(
+                lang === "en" ? "en-US" : "es-CL",
+                { weekday: "long", day: "numeric", month: "long", year: "numeric" }
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2 px-5 py-3 border-t border-border shrink-0">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { if (viewEntry) { setShareEntry(viewEntry); setShareTitle(""); setViewEntry(null); } }}>
+              <Share2 className="w-4 h-4" />
+              {b.shareToComm}
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive ml-auto" onClick={() => { if (viewEntry) { removeEntry(viewEntry); setViewEntry(null); } }}>
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </DialogContent>

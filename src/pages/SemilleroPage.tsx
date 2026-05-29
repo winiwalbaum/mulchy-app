@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, ChevronLeft, ChevronRight, Star, Leaf,
   Sprout, Users, X, Check, Loader2, Calendar, ArrowLeft, MapPin, ExternalLink, TreePine, Camera, Pencil,
+  Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { plants, type Plant, type PlantCategory } from "@/data/plants";
 import { plantExtra, formatMonths } from "@/data/plantExtra";
 import { useNativePlants, categoryEmoji, categoryLabels, type NativePlant } from "@/hooks/useNativePlants";
+import { useNativeHerbario } from "@/hooks/useNativeHerbario";
 import {
   useVarieties, useVarietyGrows, useMyGrow, useMyRating,
   upsertGrow, insertVariety, updateVariety, upsertRating, uploadVarietyPhoto,
@@ -1242,6 +1244,7 @@ const SemilleroPage = () => {
 
   // Native plants state
   const { plants: nativePlants, loading: nativeLoading, error: nativeError, fetchDescription } = useNativePlants();
+  const { savedIds: savedNativeIds, toggle: toggleNative } = useNativeHerbario();
   const [nativeCategory, setNativeCategory] = useState<string>("all");
   const [selectedNative, setSelectedNative] = useState<NativePlant | null>(null);
   const [nativeDesc, setNativeDesc] = useState<string | null>(null);
@@ -1662,6 +1665,18 @@ const SemilleroPage = () => {
                   </a>
                 )}
               </div>
+              <Button
+                variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
+                size="sm"
+                className="w-full gap-2 mt-1"
+                onClick={() => toggleNative(selectedNative.id)}
+              >
+                {savedNativeIds.has(selectedNative.id) ? (
+                  <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
+                ) : (
+                  <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
+                )}
+              </Button>
             </div>
           )}
         </DialogContent>

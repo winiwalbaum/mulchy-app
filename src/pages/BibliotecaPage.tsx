@@ -9,7 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { plants, categories, type Plant, type PlantCategory } from "@/data/plants";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useNativePlants, categoryEmoji, categoryLabels, type NativePlant } from "@/hooks/useNativePlants";
+import { useNativeHerbario } from "@/hooks/useNativeHerbario";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 
 // Detecta el link de compra correcto para "Un año en mi huerto" según la región del usuario
 const getUnAnioLink = (): { url: string; label: string } => {
@@ -56,6 +58,7 @@ const BibliotecaPage = () => {
   const [nativeDescLoading, setNativeDescLoading] = useState(false);
 
   const { plants: nativePlants, loading: nativeLoading, error: nativeError, fetchDescription } = useNativePlants();
+  const { savedIds: savedNativeIds, toggle: toggleNative } = useNativeHerbario();
 
   // Fetch description when a native plant is selected
   useEffect(() => {
@@ -497,6 +500,19 @@ const BibliotecaPage = () => {
                     </a>
                   )}
                 </div>
+
+                <Button
+                  variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
+                  size="sm"
+                  className="w-full gap-2 mt-1"
+                  onClick={() => toggleNative(selectedNative.id)}
+                >
+                  {savedNativeIds.has(selectedNative.id) ? (
+                    <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
+                  ) : (
+                    <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>
+                  )}
+                </Button>
               </div>
             </>
           )}

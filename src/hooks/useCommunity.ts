@@ -176,12 +176,20 @@ export const useCommunity = (typeFilter: PostType | "all", geoFilter: GeoFilter 
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
 
+    // Actualización optimista: cambia el estado localmente sin re-fetch ni re-orden
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, user_liked: !p.user_liked, likes_count: p.likes_count + (p.user_liked ? -1 : 1) }
+          : p
+      )
+    );
+
     if (post.user_liked) {
       await supabase.from("community_likes").delete().eq("post_id", postId).eq("user_id", user.id);
     } else {
       await supabase.from("community_likes").insert({ post_id: postId, user_id: user.id });
     }
-    fetchPosts();
   };
 
   return { posts, loading, createPost, deletePost, toggleLike, uploadImage, refetch: fetchPosts };

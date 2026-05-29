@@ -6,7 +6,7 @@ import { compressImage } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
 import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2, Ticket, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import LocationPicker from "@/components/LocationPicker";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -285,6 +285,14 @@ const ProfilePage = () => {
           <LogOut className="w-4 h-4 mr-2" />
           {p.signOut}
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground font-body pb-2">
+          <Link to="/privacidad" className="hover:text-primary transition-colors">
+            Política de Privacidad
+          </Link>
+          {" · "}
+          <span>© 2026 CASAHUERTO SpA</span>
+        </p>
       </div>
     </div>
   );

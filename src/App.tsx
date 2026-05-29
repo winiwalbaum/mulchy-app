@@ -21,6 +21,7 @@ import ProfilePage from "./pages/ProfilePage";
 import CommunityPage from "./pages/CommunityPage";
 import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,7 @@ const AppRoutes = () => {
         path="/perfil"
         element={<ProtectedRoute><OnboardingGuard><ProfilePage /></OnboardingGuard></ProtectedRoute>}
       />
+      <Route path="/privacidad" element={<PrivacyPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

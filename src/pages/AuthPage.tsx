@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff, Ticket, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -253,6 +253,15 @@ const AuthPage = () => {
               {isLogin ? a.register : a.signIn}
             </button>
           </p>
+
+          {!isLogin && (
+            <p className="text-center text-xs text-muted-foreground font-body mt-3">
+              Al registrarte aceptas nuestra{" "}
+              <Link to="/privacidad" className="text-primary hover:underline">
+                Política de Privacidad
+              </Link>
+            </p>
+          )}
         </div>
       </motion.div>
     </div>

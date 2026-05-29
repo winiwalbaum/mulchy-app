@@ -382,7 +382,7 @@ const BitacoraPage = () => {
 
           {/* Mis plantas cultivadas */}
           <SmallCard
-            to="/semillero"
+            to="/variedades"
             bgClass="bg-gradient-to-br from-primary/15 to-leaf-light/40"
             emojiBg="🌱"
             categoryLabel={es("Mis plantas", "My plants")}

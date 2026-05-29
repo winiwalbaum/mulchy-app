@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { generateUserInviteCodes } from "@/lib/inviteUtils";
 
 interface AuthContextType {
   user: User | null;
@@ -89,6 +90,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .update({ used_by: user.id, used_at: new Date().toISOString() })
       .eq("id", data.id);
     if (updateError) return false;
+    // Give the new user their 2 invite codes
+    await generateUserInviteCodes(user.id);
     setAwaitingInviteCode(false);
     return true;
   };

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateUserInviteCodes } from "@/lib/inviteUtils";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -42,6 +43,8 @@ const AuthPage = () => {
       .from("invite_codes")
       .update({ used_by: userId, used_at: new Date().toISOString() })
       .eq("id", codeId);
+    // Give the new user their 2 invite codes
+    await generateUserInviteCodes(userId);
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {

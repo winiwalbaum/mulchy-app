@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
-import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2 } from "lucide-react";
+import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2, Ticket, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import LocationPicker from "@/components/LocationPicker";
@@ -19,6 +19,24 @@ const ProfilePage = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { t, lang, setLang } = useLanguage();
   const p = t.profile as any;
+  const [inviteCodes, setInviteCodes] = useState<{ code: string; used_by: string | null }[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("invite_codes")
+      .select("code, used_by")
+      .eq("owner_user_id", user.id)
+      .then(({ data }) => { if (data) setInviteCodes(data); });
+  }, [user?.id]);
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast.success(lang === "en" ? "Code copied!" : "¡Código copiado!");
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -218,6 +236,50 @@ const ProfilePage = () => {
             ))}
           </div>
         </div>
+
+        {/* Invite codes */}
+        {inviteCodes.length > 0 && (
+          <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3">
+            <h3 className="font-semibold font-display flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-primary" />
+              {lang === "en" ? "Your invite codes" : "Tus códigos de invitación"}
+            </h3>
+            <p className="text-xs text-muted-foreground font-body">
+              {lang === "en"
+                ? "Share these with people you want to invite to MULCHY."
+                : "Comparte estos códigos con personas que quieras invitar a MULCHY."}
+            </p>
+            <div className="space-y-2">
+              {inviteCodes.map(({ code, used_by }) => (
+                <div
+                  key={code}
+                  className={`flex items-center justify-between p-3 rounded-xl border ${
+                    used_by
+                      ? "bg-muted border-muted opacity-50"
+                      : "bg-background border-border"
+                  }`}
+                >
+                  <span className="font-mono font-bold tracking-widest text-sm">{code}</span>
+                  {used_by ? (
+                    <span className="text-xs text-muted-foreground font-body">
+                      {lang === "en" ? "Used" : "Usado"}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleCopyCode(code)}
+                      className="flex items-center gap-1 text-xs text-primary font-body font-medium hover:underline"
+                    >
+                      {copiedCode === code
+                        ? <><Check className="w-3 h-3" /> {lang === "en" ? "Copied" : "Copiado"}</>
+                        : <><Copy className="w-3 h-3" /> {lang === "en" ? "Copy" : "Copiar"}</>
+                      }
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <Button variant="outline" className="w-full text-destructive hover:text-destructive" onClick={handleSignOut}>
           <LogOut className="w-4 h-4 mr-2" />

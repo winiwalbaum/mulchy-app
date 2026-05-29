@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/imageUtils";
 
 export interface Variety {
   id: string;
@@ -199,11 +200,11 @@ export const uploadVarietyPhoto = async (
   slot: 1 | 2 | 3
 ): Promise<string | null> => {
   try {
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${userId}/${Date.now()}-${slot}.${ext}`;
+    const compressed = await compressImage(file, { maxDimension: 1200, quality: 0.82 });
+    const path = `${userId}/${Date.now()}-${slot}.jpg`;
     const { data, error } = await supabase.storage
       .from("variety-photos")
-      .upload(path, file, { contentType: file.type, upsert: true });
+      .upload(path, compressed, { contentType: "image/jpeg", upsert: true });
     if (error || !data) return null;
     const { data: urlData } = supabase.storage
       .from("variety-photos")

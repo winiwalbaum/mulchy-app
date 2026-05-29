@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/hooks/useCommunity";
+import { compressImage } from "@/lib/imageUtils";
 import { toast } from "sonner";
 import { gardenTasks } from "@/data/gardenTasks";
 import { getCurrentLunarPeriod } from "@/data/lunarCalendar";
@@ -213,11 +214,11 @@ const BitacoraPage = () => {
     try {
       let imageUrl: string | null = null;
       if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}.${ext}`;
+        const compressed = await compressImage(photoFile, { maxDimension: 1200, quality: 0.82 });
+        const path = `${user.id}/${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from("journal-images")
-          .upload(path, photoFile, { contentType: photoFile.type });
+          .upload(path, compressed, { contentType: "image/jpeg" });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("journal-images").getPublicUrl(path);
         imageUrl = urlData.publicUrl;

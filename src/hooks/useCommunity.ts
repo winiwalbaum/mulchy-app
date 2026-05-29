@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { compressImage } from "@/lib/imageUtils";
 
 export type PostType = "question" | "exchange" | "photo" | "recipe";
 
@@ -129,9 +130,9 @@ export const useCommunity = (typeFilter: PostType | "all", geoFilter: GeoFilter 
 
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!user) return null;
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("community-images").upload(path, file);
+    const compressed = await compressImage(file, { maxDimension: 1200, quality: 0.82 });
+    const path = `${user.id}/${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from("community-images").upload(path, compressed, { contentType: "image/jpeg" });
     if (error) return null;
     const { data } = supabase.storage.from("community-images").getPublicUrl(path);
     return data.publicUrl;

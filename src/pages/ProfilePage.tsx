@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
 import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -48,13 +49,13 @@ const ProfilePage = () => {
     }
     setAvatarUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/avatar.${ext}`;
+      const compressed = await compressImage(file, { maxDimension: 400, quality: 0.85 });
+      const path = `${user.id}/avatar.jpg`;
       // Remove old avatar first (upsert)
       await supabase.storage.from("avatars").remove([path]);
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { contentType: file.type, upsert: true });
+        .upload(path, compressed, { contentType: "image/jpeg", upsert: true });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;

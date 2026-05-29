@@ -63,33 +63,19 @@ const getSavedPosts = (): Record<string, CommunityPost> => {
 const PostCard = ({
   post,
   onLike,
-  onOpenComments,
+  onOpen,
   onDelete,
   currentUserId,
   c,
 }: {
   post: CommunityPost;
   onLike: (id: string) => void;
-  onOpenComments: (post: CommunityPost) => void;
+  onOpen: (post: CommunityPost) => void;
   onDelete: (id: string) => void;
   currentUserId?: string;
   c: any;
 }) => {
   const timeAgo = getTimeAgo(post.created_at, c);
-  const [saved, setSaved] = useState(() => !!getSavedPosts()[post.id]);
-
-  const toggleSave = () => {
-    const current = getSavedPosts();
-    if (saved) {
-      delete current[post.id];
-      toast.info(c.removedFromJournal);
-    } else {
-      current[post.id] = { ...post };
-      toast.success(c.savedToJournal);
-    }
-    localStorage.setItem("mulchii-saved-posts", JSON.stringify(current));
-    setSaved(!saved);
-  };
   const typeLabel =
     post.type === "question" ? c.typeQuestion
     : post.type === "exchange" ? c.typeExchange
@@ -103,87 +89,107 @@ const PostCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Pantone card */}
       <div className="bg-white rounded-sm shadow-card hover:shadow-elevated transition-shadow border border-gray-200 overflow-hidden">
-        {/* Visual area */}
-        <div className="aspect-square overflow-hidden relative bg-gradient-to-br from-leaf-light/30 via-leaf-light/10 to-cream flex items-center justify-center">
-          {post.image_url ? (
-            <img
-              src={post.image_url}
-              alt={post.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <span className="text-5xl select-none">{typeEmoji[post.type]}</span>
-          )}
-          {/* Type badge */}
-          <div className="absolute top-1.5 right-1.5">
-            <span className="text-[8px] px-1 py-0.5 rounded font-body font-medium bg-white/85 text-gray-600">
-              {typeEmoji[post.type]} {typeLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Label area */}
-        <div className="bg-white px-2 pt-1.5 pb-2 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-0.5">
-            <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase">MULCHII®</p>
-            <span className="text-[8px] text-gray-400 font-body">{timeAgo}</span>
-          </div>
-          <h3 className="font-display font-bold text-sm leading-tight text-gray-900 line-clamp-2 mb-0.5">{post.title}</h3>
-          {post.body && (
-            <p className="text-[9px] text-gray-500 font-body leading-relaxed line-clamp-2 mb-1">{post.body}</p>
-          )}
-          <p className="text-[9px] text-gray-400 font-body truncate">
-            {post.display_name}{post.city && ` · ${post.city}`}
-          </p>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-gray-100">
-            <button
-              onClick={() => onLike(post.id)}
-              className={`flex items-center gap-1 text-[10px] font-body transition-colors ${post.user_liked ? "text-destructive" : "text-gray-400 hover:text-destructive"}`}
-            >
-              <Heart className={`w-3 h-3 ${post.user_liked ? "fill-current" : ""}`} />
-              {post.likes_count > 0 && post.likes_count}
-            </button>
-            <button
-              onClick={() => onOpenComments(post)}
-              className="flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-primary transition-colors"
-            >
-              <MessageCircle className="w-3 h-3" />
-              {post.comments_count > 0 && post.comments_count}
-            </button>
-            <button
-              onClick={toggleSave}
-              className={`ml-auto flex items-center gap-1 text-[10px] font-body transition-colors ${saved ? "text-primary" : "text-gray-400 hover:text-primary"}`}
-              title={saved ? c.removeFromJournal : c.saveToJournal}
-            >
-              {saved ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
-            </button>
-            {currentUserId === post.user_id && (
-              <button
-                onClick={() => onDelete(post.id)}
-                className="flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-destructive transition-colors"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
+        {/* Clickable visual + title area → opens full post */}
+        <button className="w-full text-left" onClick={() => onOpen(post)}>
+          <div className="aspect-square overflow-hidden relative bg-gradient-to-br from-leaf-light/30 via-leaf-light/10 to-cream flex items-center justify-center">
+            {post.image_url ? (
+              <img
+                src={post.image_url}
+                alt={post.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-5xl select-none">{typeEmoji[post.type]}</span>
             )}
+            <div className="absolute top-1.5 right-1.5">
+              <span className="text-[8px] px-1 py-0.5 rounded font-body font-medium bg-white/85 text-gray-600">
+                {typeEmoji[post.type]} {typeLabel}
+              </span>
+            </div>
           </div>
+          <div className="bg-white px-2 pt-1.5 pb-1 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-0.5">
+              <p className="text-[8px] font-body text-gray-400 tracking-widest uppercase">MULCHII®</p>
+              <span className="text-[8px] text-gray-400 font-body">{timeAgo}</span>
+            </div>
+            <h3 className="font-display font-bold text-sm leading-tight text-gray-900 line-clamp-2 mb-0.5">{post.title}</h3>
+            <p className="text-[9px] text-gray-400 font-body truncate">
+              {post.display_name}{post.city && ` · ${post.city}`}
+            </p>
+          </div>
+        </button>
+
+        {/* Quick actions — fuera del área clickeable */}
+        <div className="flex items-center gap-2 px-2 pb-2 pt-1 border-t border-gray-100 bg-white">
+          <button
+            onClick={() => onLike(post.id)}
+            className={`flex items-center gap-1 text-[10px] font-body transition-colors ${post.user_liked ? "text-destructive" : "text-gray-400 hover:text-destructive"}`}
+          >
+            <Heart className={`w-3 h-3 ${post.user_liked ? "fill-current" : ""}`} />
+            {post.likes_count > 0 && post.likes_count}
+          </button>
+          <button
+            onClick={() => onOpen(post)}
+            className="flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-primary transition-colors"
+          >
+            <MessageCircle className="w-3 h-3" />
+            {post.comments_count > 0 && post.comments_count}
+          </button>
+          {currentUserId === post.user_id && (
+            <button
+              onClick={() => onDelete(post.id)}
+              className="ml-auto flex items-center gap-1 text-[10px] font-body text-gray-400 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
   );
 };
 
-const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClose: () => void; c: any }) => {
+const PostDetailDialog = ({
+  post,
+  onClose,
+  onLike,
+  onDelete,
+  currentUserId,
+  c,
+}: {
+  post: CommunityPost | null;
+  onClose: () => void;
+  onLike: (id: string) => void;
+  onDelete: (id: string) => void;
+  currentUserId?: string;
+  c: any;
+}) => {
   const { comments, loading, addComment } = useComments(post?.id || null);
   const [newComment, setNewComment] = useState("");
   const [sending, setSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // sync saved state when post changes
+  useState(() => { if (post) setSaved(!!getSavedPosts()[post.id]); });
+
+  const toggleSave = () => {
+    if (!post) return;
+    const current = getSavedPosts();
+    if (saved) {
+      delete current[post.id];
+      toast.info(c.removedFromJournal);
+    } else {
+      current[post.id] = { ...post };
+      toast.success(c.savedToJournal);
+    }
+    localStorage.setItem("mulchii-saved-posts", JSON.stringify(current));
+    setSaved(!saved);
+  };
 
   const handleSend = async () => {
     if (!newComment.trim()) return;
@@ -204,7 +210,6 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
 
   if (!post) return null;
 
-  // Separate top-level comments and replies
   const topLevel = comments.filter((cm) => !cm.parent_id);
   const repliesMap = comments.reduce<Record<string, typeof comments>>((acc, cm) => {
     if (cm.parent_id) {
@@ -214,13 +219,71 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
     return acc;
   }, {});
 
+  const timeAgo = getTimeAgo(post.created_at, c);
+
   return (
     <Dialog open={!!post} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-display text-base">{post.title}</DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto space-y-3 py-2 min-h-0">
+      <DialogContent className="sm:max-w-lg p-0 max-h-[92vh] flex flex-col overflow-hidden gap-0">
+        {/* Imagen completa sin recorte */}
+        {post.image_url && (
+          <div className="w-full bg-black flex items-center justify-center shrink-0" style={{ maxHeight: "45vh" }}>
+            <img
+              src={post.image_url}
+              alt={post.title}
+              className="w-full h-auto object-contain"
+              style={{ maxHeight: "45vh" }}
+            />
+          </div>
+        )}
+
+        {/* Info del post */}
+        <div className="px-4 py-3 border-b border-border shrink-0">
+          <DialogHeader className="mb-0 space-y-0">
+            <DialogTitle className="font-display font-bold text-base leading-tight text-left">
+              {post.title}
+            </DialogTitle>
+          </DialogHeader>
+          {post.body && (
+            <p className="text-sm font-body text-muted-foreground mt-1.5 leading-relaxed">{post.body}</p>
+          )}
+          <p className="text-xs text-muted-foreground font-body mt-1">
+            {post.display_name}{post.city && ` · ${post.city}`} · {timeAgo}
+          </p>
+
+          {/* Acciones */}
+          <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-border">
+            <button
+              onClick={() => onLike(post.id)}
+              className={`flex items-center gap-1.5 text-sm font-body transition-colors ${post.user_liked ? "text-destructive" : "text-muted-foreground hover:text-destructive"}`}
+            >
+              <Heart className={`w-4 h-4 ${post.user_liked ? "fill-current" : ""}`} />
+              {post.likes_count > 0 && <span>{post.likes_count}</span>}
+            </button>
+            <span className="flex items-center gap-1.5 text-sm font-body text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              {post.comments_count > 0 && post.comments_count}
+            </span>
+            <div className="ml-auto flex items-center gap-3">
+              <button
+                onClick={toggleSave}
+                className={`transition-colors ${saved ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+              >
+                {saved ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+              </button>
+              {currentUserId === post.user_id && (
+                <button
+                  onClick={() => { onDelete(post.id); onClose(); }}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Comentarios con hilos */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -230,7 +293,6 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
           ) : (
             topLevel.map((cm) => (
               <div key={cm.id} className="space-y-2">
-                {/* Top-level comment */}
                 <div className="flex gap-2">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] shrink-0 mt-0.5">🌿</div>
                   <div className="flex-1">
@@ -251,7 +313,6 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
                   </div>
                 </div>
 
-                {/* Replies */}
                 {(repliesMap[cm.id] || []).map((reply) => (
                   <div key={reply.id} className="flex gap-2 ml-8">
                     <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[9px] shrink-0 mt-0.5">🌱</div>
@@ -265,7 +326,6 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
                   </div>
                 ))}
 
-                {/* Inline reply input */}
                 {replyingTo === cm.id && (
                   <div className="flex gap-2 ml-8">
                     <Input
@@ -285,7 +345,9 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
             ))
           )}
         </div>
-        <div className="flex gap-2 pt-2 border-t border-border">
+
+        {/* Input nuevo comentario */}
+        <div className="flex gap-2 px-4 py-3 border-t border-border shrink-0">
           <Input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
@@ -437,7 +499,7 @@ const CommunityPage = () => {
   const [radiusKm, setRadiusKm] = useState(50);
   const [showAll, setShowAll] = useState(false);
   const [showNewPost, setShowNewPost] = useState(false);
-  const [commentPost, setCommentPost] = useState<CommunityPost | null>(null);
+  const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const { profile } = useProfile();
   const { t } = useLanguage();
   const c = t.community as any;
@@ -558,7 +620,7 @@ const CommunityPage = () => {
           <div className="grid grid-cols-2 gap-2">
             <AnimatePresence>
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} onLike={toggleLike} onOpenComments={setCommentPost} onDelete={deletePost} currentUserId={user?.id} c={c} />
+                <PostCard key={post.id} post={post} onLike={toggleLike} onOpen={setSelectedPost} onDelete={deletePost} currentUserId={user?.id} c={c} />
               ))}
             </AnimatePresence>
           </div>
@@ -566,7 +628,7 @@ const CommunityPage = () => {
       </div>
 
       <NewPostDialog open={showNewPost} onClose={() => setShowNewPost(false)} onCreate={createPost} onUploadImage={uploadImage} c={c} />
-      <CommentsSheet post={commentPost} onClose={() => setCommentPost(null)} c={c} />
+      <PostDetailDialog post={selectedPost} onClose={() => setSelectedPost(null)} onLike={toggleLike} onDelete={deletePost} currentUserId={user?.id} c={c} />
     </div>
   );
 };

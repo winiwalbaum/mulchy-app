@@ -64,7 +64,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" }}
           className="text-center"
         >
-          <h1 className="font-display font-bold text-4xl text-gray-800 tracking-tight leading-tight">
+          <h1 className="font-brand font-bold text-4xl text-gray-800 tracking-tight leading-tight">
             {l.title1}
           </h1>
           <p className="font-display italic text-lg text-gray-400 mt-1 mb-3">

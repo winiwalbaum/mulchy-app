@@ -30,6 +30,7 @@ import {
   Bookmark,
   BookmarkCheck,
   ChefHat,
+  CornerDownRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -180,16 +181,38 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
   const { comments, loading, addComment } = useComments(post?.id || null);
   const [newComment, setNewComment] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const handleSend = async () => {
     if (!newComment.trim()) return;
     setSending(true);
-    await addComment(newComment.trim());
+    await addComment(newComment.trim(), null);
     setNewComment("");
     setSending(false);
   };
 
+  const handleSendReply = async (parentId: string) => {
+    if (!replyText.trim()) return;
+    setSendingReply(true);
+    await addComment(replyText.trim(), parentId);
+    setReplyText("");
+    setReplyingTo(null);
+    setSendingReply(false);
+  };
+
   if (!post) return null;
+
+  // Separate top-level comments and replies
+  const topLevel = comments.filter((cm) => !cm.parent_id);
+  const repliesMap = comments.reduce<Record<string, typeof comments>>((acc, cm) => {
+    if (cm.parent_id) {
+      if (!acc[cm.parent_id]) acc[cm.parent_id] = [];
+      acc[cm.parent_id].push(cm);
+    }
+    return acc;
+  }, {});
 
   return (
     <Dialog open={!!post} onOpenChange={(open) => !open && onClose()}>
@@ -202,19 +225,62 @@ const CommentsSheet = ({ post, onClose, c }: { post: CommunityPost | null; onClo
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
-          ) : comments.length === 0 ? (
+          ) : topLevel.length === 0 ? (
             <p className="text-sm text-muted-foreground font-body text-center py-8">{c.firstComment}</p>
           ) : (
-            comments.map((cm) => (
-              <div key={cm.id} className="flex gap-2">
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] shrink-0 mt-0.5">🌿</div>
-                <div className="bg-muted rounded-xl px-3 py-2 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold font-display">{cm.display_name}</span>
-                    <span className="text-[10px] text-muted-foreground font-body">{getTimeAgo(cm.created_at, c)}</span>
+            topLevel.map((cm) => (
+              <div key={cm.id} className="space-y-2">
+                {/* Top-level comment */}
+                <div className="flex gap-2">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] shrink-0 mt-0.5">🌿</div>
+                  <div className="flex-1">
+                    <div className="bg-muted rounded-xl px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold font-display">{cm.display_name}</span>
+                        <span className="text-[10px] text-muted-foreground font-body">{getTimeAgo(cm.created_at, c)}</span>
+                      </div>
+                      <p className="text-sm font-body mt-0.5">{cm.body}</p>
+                    </div>
+                    <button
+                      onClick={() => { setReplyingTo(replyingTo === cm.id ? null : cm.id); setReplyText(""); }}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary font-body mt-1 ml-2 transition-colors"
+                    >
+                      <CornerDownRight className="w-3 h-3" />
+                      {c.reply || "Responder"}
+                    </button>
                   </div>
-                  <p className="text-sm font-body mt-0.5">{cm.body}</p>
                 </div>
+
+                {/* Replies */}
+                {(repliesMap[cm.id] || []).map((reply) => (
+                  <div key={reply.id} className="flex gap-2 ml-8">
+                    <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[9px] shrink-0 mt-0.5">🌱</div>
+                    <div className="bg-background border border-border rounded-xl px-3 py-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold font-display">{reply.display_name}</span>
+                        <span className="text-[10px] text-muted-foreground font-body">{getTimeAgo(reply.created_at, c)}</span>
+                      </div>
+                      <p className="text-sm font-body mt-0.5">{reply.body}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Inline reply input */}
+                {replyingTo === cm.id && (
+                  <div className="flex gap-2 ml-8">
+                    <Input
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder={`${c.replyTo || "Responder a"} ${cm.display_name}…`}
+                      className="font-body text-sm"
+                      autoFocus
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendReply(cm.id)}
+                    />
+                    <Button size="icon" onClick={() => handleSendReply(cm.id)} disabled={sendingReply || !replyText.trim()}>
+                      {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -401,7 +467,7 @@ const CommunityPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <img src="/logoplural.png" className="w-7 h-7 object-contain" alt="Comunidad" />
-              <h1 className="text-xl font-semibold font-display">{c.title}</h1>
+              <h1 className="text-xl font-semibold">{c.title}</h1>
             </div>
             <Button size="sm" onClick={() => setShowNewPost(true)}>
               <Plus className="w-4 h-4 mr-1" />

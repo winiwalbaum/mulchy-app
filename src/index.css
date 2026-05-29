@@ -46,7 +46,8 @@
     --cream: 40 30% 94%;
     --dot-color: 30 10% 75%;
 
-    --font-display: 'Darumadrop One', 'Barlow Condensed', 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-display: 'Barlow Condensed', 'Barlow', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-brand: 'Darumadrop One', 'Barlow Condensed', sans-serif;
     --font-body: 'DM Sans', sans-serif;
 
     --shadow-soft: 0 2px 15px -3px hsl(30 15% 15% / 0.08);
@@ -73,7 +74,11 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
+    font-family: var(--font-brand);
+  }
+
+  h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: 0.02em;
   }
@@ -83,6 +88,10 @@
   .font-display {
     font-family: var(--font-display);
     letter-spacing: 0.02em;
+  }
+
+  .font-brand {
+    font-family: var(--font-brand);
   }
 
   .font-body {

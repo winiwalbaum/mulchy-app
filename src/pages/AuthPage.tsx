@@ -126,7 +126,7 @@ const AuthPage = () => {
             <div className="flex justify-center mb-4">
               <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHII" />
             </div>
-            <h1 className="text-2xl font-bold font-display mb-2">🌱 {a.inviteCode}</h1>
+            <h1 className="text-2xl font-bold mb-2">🌱 {a.inviteCode}</h1>
             <p className="text-muted-foreground font-body text-sm">{a.inviteOnlyNotice}</p>
           </div>
           <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
@@ -168,7 +168,7 @@ const AuthPage = () => {
               <img src="/logo.png" className="w-full h-full object-contain" alt="MULCHII" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-display mb-2">
+          <h1 className="text-3xl font-bold mb-2">
             {isLogin ? a.welcomeBack : a.createAccount}
           </h1>
           <p className="text-muted-foreground font-body">

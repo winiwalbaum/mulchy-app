@@ -161,7 +161,7 @@ const FeedPage = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
-              <span className="font-display font-bold text-lg">Mulchii</span>
+              <span className="font-brand text-lg">Mulchii</span>
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground font-body capitalize">{today}</p>

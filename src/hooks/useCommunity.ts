@@ -31,6 +31,7 @@ export interface CommunityComment {
   display_name: string;
   body: string;
   created_at: string;
+  parent_id: string | null;
 }
 
 type GeoFilter = "all" | "city" | "nearby";
@@ -108,6 +109,13 @@ export const useCommunity = (typeFilter: PostType | "all", geoFilter: GeoFilter 
           haversineKm(profile.latitude!, profile.longitude!, p.latitude!, p.longitude!) <= radiusKm
       );
     }
+
+    // Sort by likes desc, then by date desc
+    enriched.sort(
+      (a, b) =>
+        b.likes_count - a.likes_count ||
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
     setPosts(enriched);
     setLoading(false);
@@ -199,13 +207,14 @@ export const useComments = (postId: string | null) => {
 
   useEffect(() => { fetchComments(); }, [fetchComments]);
 
-  const addComment = async (body: string) => {
+  const addComment = async (body: string, parentId?: string | null) => {
     if (!user || !profile || !postId) return;
     await supabase.from("community_comments").insert({
       post_id: postId,
       user_id: user.id,
       display_name: profile.display_name || "Anónimo",
       body,
+      parent_id: parentId ?? null,
     });
     fetchComments();
   };

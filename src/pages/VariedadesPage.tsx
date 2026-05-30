@@ -14,14 +14,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { categoryEmoji, categoryLabels } from "@/hooks/useNativePlants";
 
 interface NativePlantCard {
-  id: string;
-  taxon_id: number;
+  native_plant_id: string;
   common_name: string | null;
   common_name_en: string | null;
   scientific_name: string;
   category: string;
   image_url: string | null;
-  observation_count: number;
 }
 
 const CATALOG_CATEGORIES: { value: PlantCategory | "all"; label: { es: string; en: string } }[] = [
@@ -135,21 +133,11 @@ const VariedadesPage = () => {
   useEffect(() => {
     const fetchNatives = async () => {
       if (!user) { setNativeLoading(false); return; }
-      const { data: rows } = await supabase
-        .from("user_native_plants")
-        .select("native_plant_id")
-        .eq("user_id", user.id);
-
-      if (!rows || rows.length === 0) { setNativePlants([]); setNativeLoading(false); return; }
-
-      // native_plant_id stores taxon_id as text
-      const taxonIds = rows.map((r: any) => parseInt(r.native_plant_id, 10)).filter(Boolean);
       const { data } = await supabase
-        .from("native_plants_cache")
-        .select("id, taxon_id, common_name, common_name_en, scientific_name, category, image_url, observation_count")
-        .in("taxon_id", taxonIds);
-
-      setNativePlants(data || []);
+        .from("user_native_plants")
+        .select("native_plant_id, common_name, common_name_en, scientific_name, category, image_url")
+        .eq("user_id", user.id);
+      setNativePlants((data as NativePlantCard[]) || []);
       setNativeLoading(false);
     };
     fetchNatives();
@@ -318,7 +306,7 @@ const VariedadesPage = () => {
                 const catLabel = categoryLabels[np.category]?.[lang === "en" ? "en" : "es"] || np.category;
                 return (
                   <motion.div
-                    key={np.id}
+                    key={np.native_plant_id}
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: Math.min(i * 0.04, 0.4) }}
@@ -355,8 +343,8 @@ const VariedadesPage = () => {
                       className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm bg-emerald-700/90 text-white transition-colors hover:bg-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleNative(String(np.taxon_id));
-                        setNativePlants((prev) => prev.filter((p) => p.taxon_id !== np.taxon_id));
+                        toggleNative(np.native_plant_id);
+                        setNativePlants((prev) => prev.filter((p) => p.native_plant_id !== np.native_plant_id));
                       }}
                       title={es("Quitar de mis plantas", "Remove from my plants")}
                     >
@@ -618,13 +606,10 @@ const VariedadesPage = () => {
                     </span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground font-body">
-                  {selectedNative.observation_count.toLocaleString()} {es("observaciones en iNaturalist", "observations on iNaturalist")}
-                </p>
                 <button
                   onClick={() => {
-                    toggleNative(String(selectedNative.taxon_id));
-                    setNativePlants((prev) => prev.filter((p) => p.taxon_id !== selectedNative.taxon_id));
+                    toggleNative(selectedNative.native_plant_id);
+                    setNativePlants((prev) => prev.filter((p) => p.native_plant_id !== selectedNative.native_plant_id));
                     setSelectedNative(null);
                   }}
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors border border-destructive/30 text-destructive hover:bg-destructive/5"
@@ -634,7 +619,7 @@ const VariedadesPage = () => {
                 </button>
                 <Link
                   to="/biblioteca"
-                  state={{ tab: "native", openPlant: selectedNative.id }}
+                  state={{ tab: "native" }}
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-primary/30 text-primary font-body text-sm font-medium hover:bg-primary/5 transition-colors"
                 >
                   <TreePine className="w-4 h-4" />

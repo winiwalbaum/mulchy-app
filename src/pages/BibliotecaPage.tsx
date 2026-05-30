@@ -471,7 +471,13 @@ const BibliotecaPage = () => {
                   variant={savedNativeIds.has(String(selectedNative.taxon_id)) ? "default" : "outline"}
                   size="sm"
                   className="w-full gap-2"
-                  onClick={() => toggleNative(String(selectedNative.taxon_id))}
+                  onClick={() => toggleNative(String(selectedNative.taxon_id), {
+                    common_name: selectedNative.common_name,
+                    common_name_en: selectedNative.common_name_en,
+                    scientific_name: selectedNative.scientific_name,
+                    category: selectedNative.category,
+                    image_url: selectedNative.image_url,
+                  })}
                 >
                   {savedNativeIds.has(String(selectedNative.taxon_id)) ? (
                     <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>

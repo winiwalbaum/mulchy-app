@@ -210,7 +210,7 @@ const FeedPage = () => {
             {/* 2 — Herbario */}
             {latestVariety ? (
               <MagCard
-                to="/variedades"
+                to="/semillero"
                 image={latestVariety.image_url || latestVariety.image_url_2 || latestVariety.image_url_3}
                 bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
                 emojiBg="🌱"
@@ -223,7 +223,7 @@ const FeedPage = () => {
               />
             ) : (
               <MagCard
-                to="/variedades"
+                to="/semillero"
                 image="/illustrations/nasturtium.jpg"
                 bgClass="bg-[#FAFAF8]"
                 categoryLabel={es("Herbario", "Herbarium")}

@@ -7,6 +7,7 @@ import {
   Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1254,6 +1255,17 @@ const SemilleroPage = () => {
 
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Huertero/a";
 
+  // Recent community varieties for the featured strip
+  const [recentVarieties, setRecentVarieties] = useState<Variety[]>([]);
+  useEffect(() => {
+    (supabase as any)
+      .from("plant_varieties")
+      .select("id, name, plant_scientific_name, image_url")
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }: { data: Variety[] | null }) => setRecentVarieties(data || []));
+  }, []);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return plants.filter((p) => {
@@ -1397,6 +1409,45 @@ const SemilleroPage = () => {
                 ? "Explore the plant catalog, discover community varieties, and add your own growing experience."
                 : "Explora el catálogo, descubre variedades de la comunidad y agrega tu experiencia de cultivo."}
             </p>
+
+            {/* ── Variedades destacadas ── */}
+            {recentVarieties.length > 0 && (
+              <div className="mb-5">
+                <p className="text-[11px] font-body font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                  {lang === "en" ? "Community varieties" : "Variedades de la comunidad"}
+                </p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {recentVarieties.map((v) => {
+                    const plant = plants.find((p) => p.scientificName === v.plant_scientific_name);
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          setCategory("all");
+                          setSearch("");
+                          setExpandedName(v.plant_scientific_name);
+                        }}
+                        className="shrink-0 w-28 bg-card rounded-xl border border-border overflow-hidden text-left hover:border-primary/60 transition-colors"
+                      >
+                        <div className="h-16 bg-muted overflow-hidden flex items-center justify-center">
+                          {v.image_url ? (
+                            <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl">{(plant as any)?.emoji ?? "🌱"}</span>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="text-[11px] font-body font-semibold leading-tight truncate">{v.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-body truncate">
+                            {plant ? (lang === "en" ? plant.name_en : plant.name) : v.plant_scientific_name}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
               {activeCategories.map((c) => (

@@ -49,11 +49,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const pendingCodeId = localStorage.getItem("pendingInviteCode");
             localStorage.removeItem("pendingInviteCode");
             if (pendingCodeId) {
-              // Claim the pre-validated invite code
+              // Claim the pre-validated invite code via SECURITY DEFINER RPC
               supabase
-                .from("invite_codes")
-                .update({ used_by: session.user.id, used_at: new Date().toISOString() })
-                .eq("id", pendingCodeId)
+                .rpc("claim_invite_code", {
+                  p_code_id: pendingCodeId,
+                  p_user_id: session.user.id,
+                })
                 .then(() => {});
             } else {
               // New Google user without invite code — block until they enter one
@@ -85,11 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .single();
     if (error || !data || !data.is_active || data.used_by) return false;
     if (data.expires_at && new Date(data.expires_at) < new Date()) return false;
-    const { error: updateError } = await supabase
-      .from("invite_codes")
-      .update({ used_by: user.id, used_at: new Date().toISOString() })
-      .eq("id", data.id);
-    if (updateError) return false;
+    // Use SECURITY DEFINER RPC to bypass RLS (same as email signup flow)
+    const { error: rpcError } = await supabase.rpc("claim_invite_code", {
+      p_code_id: data.id,
+      p_user_id: user.id,
+    });
+    if (rpcError) return false;
     // Give the new user their 2 invite codes
     await generateUserInviteCodes(user.id);
     setAwaitingInviteCode(false);

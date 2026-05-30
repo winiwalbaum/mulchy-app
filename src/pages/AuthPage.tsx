@@ -12,10 +12,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateUserInviteCodes } from "@/lib/inviteUtils";
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  // If ?invite=CODE in URL → start in signup mode with code pre-filled
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlInviteCode = searchParams.get("invite") ?? "";
+
+  const [isLogin, setIsLogin] = useState(!urlInviteCode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(urlInviteCode.toUpperCase());
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [claimLoading, setClaimLoading] = useState(false);
@@ -125,7 +129,7 @@ const AuthPage = () => {
               <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHII" />
             </div>
             <h1 className="text-2xl font-bold mb-2">🌱 {a.inviteCode}</h1>
-            <p className="text-muted-foreground font-body text-sm">{a.inviteOnlyNotice}</p>
+            <p className="text-muted-foreground font-body text-sm">Ingresa el código que recibiste en tu email de invitación.</p>
           </div>
           <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
             <form onSubmit={handleClaimGoogleInvite} className="space-y-4">
@@ -172,6 +176,22 @@ const AuthPage = () => {
           <p className="text-muted-foreground font-body">
             {isLogin ? a.loginSubtitle : a.signupSubtitle}
           </p>
+        </div>
+
+        {/* Login / Register tabs */}
+        <div className="flex rounded-xl overflow-hidden border border-border mb-4">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${isLogin ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+          >
+            {a.login}
+          </button>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${!isLogin ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+          >
+            {a.signup}
+          </button>
         </div>
 
         <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
@@ -244,13 +264,6 @@ const AuthPage = () => {
               {loading ? ((t.common as any).loading) : isLogin ? a.login : a.signup}
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground font-body mt-4">
-            {isLogin ? a.noAccount : a.hasAccount}{" "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
-              {isLogin ? a.register : a.signIn}
-            </button>
-          </p>
 
           {!isLogin && (
             <p className="text-center text-xs text-muted-foreground font-body mt-3">

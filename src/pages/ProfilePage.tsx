@@ -31,10 +31,24 @@ const ProfilePage = () => {
       .then(({ data }) => { if (data) setInviteCodes(data); });
   }, [user?.id]);
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
+  const getInviteLink = (code: string) => `https://mulchii.com?invite=${code}`;
+
+  const handleShareCode = async (code: string) => {
+    const link = getInviteLink(code);
+    const text = lang === "en"
+      ? `Join me on Mulchii 🌱 — your digital garden journal. Use my invite link: ${link}`
+      : `Únete a Mulchii 🌱 — el diario de tu huerta. Usa mi link de invitación: ${link}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Mulchii", text, url: link });
+        return;
+      } catch { /* user cancelled share sheet */ }
+    }
+    // Fallback: copy link to clipboard
+    navigator.clipboard.writeText(link);
     setCopiedCode(code);
-    toast.success(lang === "en" ? "Code copied!" : "¡Código copiado!");
+    toast.success(lang === "en" ? "Link copied!" : "¡Link copiado!");
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -253,27 +267,32 @@ const ProfilePage = () => {
               {inviteCodes.map(({ code, used_by }) => (
                 <div
                   key={code}
-                  className={`flex items-center justify-between p-3 rounded-xl border ${
-                    used_by
-                      ? "bg-muted border-muted opacity-50"
-                      : "bg-background border-border"
+                  className={`p-3 rounded-xl border ${
+                    used_by ? "bg-muted border-muted opacity-50" : "bg-background border-border"
                   }`}
                 >
-                  <span className="font-mono font-bold tracking-widest text-sm">{code}</span>
-                  {used_by ? (
-                    <span className="text-xs text-muted-foreground font-body">
-                      {lang === "en" ? "Used" : "Usado"}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleCopyCode(code)}
-                      className="flex items-center gap-1 text-xs text-primary font-body font-medium hover:underline"
-                    >
-                      {copiedCode === code
-                        ? <><Check className="w-3 h-3" /> {lang === "en" ? "Copied" : "Copiado"}</>
-                        : <><Copy className="w-3 h-3" /> {lang === "en" ? "Copy" : "Copiar"}</>
-                      }
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold tracking-widest text-sm">{code}</span>
+                    {used_by ? (
+                      <span className="text-xs text-muted-foreground font-body">
+                        {lang === "en" ? "Used ✓" : "Usado ✓"}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleShareCode(code)}
+                        className="flex items-center gap-1 text-xs text-primary font-body font-medium hover:underline"
+                      >
+                        {copiedCode === code
+                          ? <><Check className="w-3 h-3" /> {lang === "en" ? "Copied!" : "¡Copiado!"}</>
+                          : <><Copy className="w-3 h-3" /> {lang === "en" ? "Share link" : "Compartir link"}</>
+                        }
+                      </button>
+                    )}
+                  </div>
+                  {!used_by && (
+                    <p className="text-[10px] text-muted-foreground font-mono mt-1 truncate">
+                      mulchii.com?invite={code}
+                    </p>
                   )}
                 </div>
               ))}

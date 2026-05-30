@@ -1634,12 +1634,12 @@ const SemilleroPage = () => {
                 </div>
               </div>
               <Button
-                variant={savedNativeIds.has(selectedNative.id) ? "default" : "outline"}
+                variant={savedNativeIds.has(String(selectedNative.taxon_id)) ? "default" : "outline"}
                 size="sm"
                 className="w-full gap-2"
-                onClick={() => toggleNative(selectedNative.id)}
+                onClick={() => toggleNative(String(selectedNative.taxon_id))}
               >
-                {savedNativeIds.has(selectedNative.id) ? (
+                {savedNativeIds.has(String(selectedNative.taxon_id)) ? (
                   <><BookmarkCheck className="w-4 h-4" /> {lang === "en" ? "In my collection" : "En mi colección"}</>
                 ) : (
                   <><Bookmark className="w-4 h-4" /> {lang === "en" ? "Add to my plants" : "Agregar a mis plantas"}</>

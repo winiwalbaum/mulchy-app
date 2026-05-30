@@ -15,6 +15,7 @@ import { categoryEmoji, categoryLabels } from "@/hooks/useNativePlants";
 
 interface NativePlantCard {
   id: string;
+  taxon_id: number;
   common_name: string | null;
   common_name_en: string | null;
   scientific_name: string;
@@ -141,11 +142,12 @@ const VariedadesPage = () => {
 
       if (!rows || rows.length === 0) { setNativePlants([]); setNativeLoading(false); return; }
 
-      const ids = rows.map((r: any) => r.native_plant_id);
+      // native_plant_id stores taxon_id as text
+      const taxonIds = rows.map((r: any) => parseInt(r.native_plant_id, 10)).filter(Boolean);
       const { data } = await supabase
         .from("native_plants_cache")
-        .select("id, common_name, common_name_en, scientific_name, category, image_url, observation_count")
-        .in("id", ids);
+        .select("id, taxon_id, common_name, common_name_en, scientific_name, category, image_url, observation_count")
+        .in("taxon_id", taxonIds);
 
       setNativePlants(data || []);
       setNativeLoading(false);
@@ -353,8 +355,8 @@ const VariedadesPage = () => {
                       className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur-sm bg-emerald-700/90 text-white transition-colors hover:bg-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleNative(np.id);
-                        setNativePlants((prev) => prev.filter((p) => p.id !== np.id));
+                        toggleNative(String(np.taxon_id));
+                        setNativePlants((prev) => prev.filter((p) => p.taxon_id !== np.taxon_id));
                       }}
                       title={es("Quitar de mis plantas", "Remove from my plants")}
                     >
@@ -621,8 +623,8 @@ const VariedadesPage = () => {
                 </p>
                 <button
                   onClick={() => {
-                    toggleNative(selectedNative.id);
-                    setNativePlants((prev) => prev.filter((p) => p.id !== selectedNative.id));
+                    toggleNative(String(selectedNative.taxon_id));
+                    setNativePlants((prev) => prev.filter((p) => p.taxon_id !== selectedNative.taxon_id));
                     setSelectedNative(null);
                   }}
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-body text-sm font-medium transition-colors border border-destructive/30 text-destructive hover:bg-destructive/5"

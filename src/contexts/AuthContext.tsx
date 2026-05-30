@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { generateUserInviteCodes } from "@/lib/inviteUtils";
@@ -28,76 +28,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [awaitingInviteCode, setAwaitingInviteCode] = useState(false);
+  const checkedRef = useRef<Set<string>>(new Set());
 
-  // Check DB whether this Google user has already claimed an invite code.
-  // Queries invite_codes (requires "Users can see own claimed code" RLS policy)
-  // AND profiles as fallback (user has profile = completed onboarding = had a valid code).
-  const googleUserHasCode = async (userId: string): Promise<boolean> => {
-    // Primary check: invite_codes where used_by = userId
+  // Async check: does this Google user have a claimed invite code or profile?
+  // Called outside onAuthStateChange callback to avoid async-in-listener issues.
+  const checkGoogleAccess = async (userId: string) => {
+    if (checkedRef.current.has(userId)) return; // already checked this session
+    checkedRef.current.add(userId);
+
+    // 1. Check invite_codes where used_by = userId
     const { data: codeData } = await supabase
       .from("invite_codes")
       .select("id")
       .eq("used_by", userId)
       .maybeSingle();
-    if (codeData) return true;
+    if (codeData) return; // has claimed code → allow
 
-    // Fallback: if user has a profile they completed onboarding (had a valid invite)
+    // 2. Fallback: check profiles (completed onboarding = had valid invite)
     const { data: profileData } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", userId)
       .maybeSingle();
-    return !!profileData;
+    if (profileData) return; // has profile → allow
+
+    // No code and no profile → block
+    setAwaitingInviteCode(true);
   };
 
   useEffect(() => {
+    // Single source of truth: onAuthStateChange handles everything
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
 
         if (!session) {
           setAwaitingInviteCode(false);
-          setLoading(false);
+          checkedRef.current.clear();
           return;
         }
 
         if (session.user.app_metadata?.provider === "google") {
-          // Check if there's a pre-validated code waiting from the signup flow
           const pendingCodeId = localStorage.getItem("pendingInviteCode");
-          localStorage.removeItem("pendingInviteCode");
-
           if (pendingCodeId) {
-            // Claim the pre-validated code, then let them in
-            await supabase.rpc("claim_invite_code", {
+            localStorage.removeItem("pendingInviteCode");
+            // Claim pre-validated code asynchronously (non-blocking)
+            supabase.rpc("claim_invite_code", {
               p_code_id: pendingCodeId,
               p_user_id: session.user.id,
-            });
-            await generateUserInviteCodes(session.user.id);
-            setAwaitingInviteCode(false);
+            }).then(() => generateUserInviteCodes(session.user.id));
           } else {
-            // Check DB — if no claimed code exists, block until they enter one
-            const hasCode = await googleUserHasCode(session.user.id);
-            setAwaitingInviteCode(!hasCode);
+            // Run async check outside the synchronous callback
+            setTimeout(() => checkGoogleAccess(session.user.id), 0);
           }
         }
-
-        setLoading(false);
       }
     );
-
-    // Also check on initial session load (returning user opening the app)
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user?.app_metadata?.provider === "google") {
-        const hasCode = await googleUserHasCode(session.user.id);
-        if (!hasCode) setAwaitingInviteCode(true);
-      }
-
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -112,18 +100,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .single();
     if (error || !data || !data.is_active || data.used_by) return false;
     if (data.expires_at && new Date(data.expires_at) < new Date()) return false;
-    // Use SECURITY DEFINER RPC to bypass RLS
     const { error: rpcError } = await supabase.rpc("claim_invite_code", {
       p_code_id: data.id,
       p_user_id: user.id,
     });
     if (rpcError) return false;
     await generateUserInviteCodes(user.id);
+    checkedRef.current.delete(user.id); // allow re-check after claiming
     setAwaitingInviteCode(false);
     return true;
   };
 
   const signOut = async () => {
+    checkedRef.current.clear();
     await supabase.auth.signOut();
   };
 

@@ -81,7 +81,6 @@ export const useVarieties = (scientificName: string | null) => {
       .from("plant_varieties")
       .select("*, user_variety_grows(count)")
       .eq("plant_scientific_name", scientificName)
-      .eq("approved", true)
       .order("info_score", { ascending: false })
       .order("name");
     setVarieties(
@@ -265,7 +264,7 @@ export const insertVariety = async (variety: {
 }) => {
   const { data, error } = await (supabase as any)
     .from("plant_varieties")
-    .insert(variety)
+    .insert({ ...variety, approved: true })
     .select()
     .single();
   return { data, error };

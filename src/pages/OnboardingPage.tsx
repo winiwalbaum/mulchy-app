@@ -258,21 +258,34 @@ const OnboardingPage = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label className="font-body text-xs text-muted-foreground">{ob.minTemp as string}</Label>
-                        <Input
-                          type="number"
-                          value={minTemp}
-                          onChange={(e) => setMinTemp(e.target.value)}
-                          placeholder="-3"
-                          className="mt-1 font-body"
-                        />
+                        <div className="flex mt-1 gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setMinTemp(v => v.startsWith("-") ? v.slice(1) : v ? "-" + v : "-")}
+                            className="px-3 rounded-md border border-input bg-muted text-sm font-mono hover:bg-muted/80 flex-shrink-0"
+                            title="Cambiar signo"
+                          >±</button>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            value={minTemp}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/[^0-9]/g, "");
+                              setMinTemp(prev => (prev.startsWith("-") ? "-" : "") + raw);
+                            }}
+                            placeholder="3"
+                            className="font-body"
+                          />
+                        </div>
                         <p className="text-[10px] text-muted-foreground font-body mt-1">{ob.minTempHint as string}</p>
                       </div>
                       <div>
                         <Label className="font-body text-xs text-muted-foreground">{ob.maxTemp as string}</Label>
                         <Input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           value={maxTemp}
-                          onChange={(e) => setMaxTemp(e.target.value)}
+                          onChange={(e) => setMaxTemp(e.target.value.replace(/[^0-9]/g, ""))}
                           placeholder="35"
                           className="mt-1 font-body"
                         />

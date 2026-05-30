@@ -214,7 +214,7 @@ const FeedPage = () => {
                 image={latestVariety.image_url || latestVariety.image_url_2 || latestVariety.image_url_3}
                 bgClass="bg-gradient-to-br from-primary/20 to-leaf-light/40"
                 emojiBg="🌱"
-                categoryLabel={es("Herbario", "Herbarium")}
+                categoryLabel={es("Semillero", "Seed Library")}
                 categoryClass="bg-primary/90 text-primary-foreground"
                 icon={Sprout}
                 title={latestVariety.name}
@@ -226,7 +226,7 @@ const FeedPage = () => {
                 to="/semillero"
                 image="/illustrations/nasturtium.jpg"
                 bgClass="bg-[#FAFAF8]"
-                categoryLabel={es("Herbario", "Herbarium")}
+                categoryLabel={es("Semillero", "Seed Library")}
                 categoryClass="bg-primary/90 text-primary-foreground"
                 icon={Sprout}
                 title={es("¡Agrega tu primera variedad!", "Add your first variety!")}

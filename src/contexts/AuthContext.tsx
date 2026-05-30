@@ -30,14 +30,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [awaitingInviteCode, setAwaitingInviteCode] = useState(false);
 
   // Check DB whether this Google user has already claimed an invite code.
-  // Returns true if they have one (can proceed), false if they still need one.
+  // Queries invite_codes (requires "Users can see own claimed code" RLS policy)
+  // AND profiles as fallback (user has profile = completed onboarding = had a valid code).
   const googleUserHasCode = async (userId: string): Promise<boolean> => {
-    const { data } = await supabase
+    // Primary check: invite_codes where used_by = userId
+    const { data: codeData } = await supabase
       .from("invite_codes")
       .select("id")
       .eq("used_by", userId)
       .maybeSingle();
-    return !!data;
+    if (codeData) return true;
+
+    // Fallback: if user has a profile they completed onboarding (had a valid invite)
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    return !!profileData;
   };
 
   useEffect(() => {

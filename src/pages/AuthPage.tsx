@@ -39,10 +39,8 @@ const AuthPage = () => {
   };
 
   const claimInviteCode = async (codeId: string, userId: string) => {
-    await supabase
-      .from("invite_codes")
-      .update({ used_by: userId, used_at: new Date().toISOString() })
-      .eq("id", codeId);
+    // Use SECURITY DEFINER function to bypass RLS (user may not have session yet)
+    await supabase.rpc("claim_invite_code", { p_code_id: codeId, p_user_id: userId });
     // Give the new user their 2 invite codes
     await generateUserInviteCodes(userId);
   };

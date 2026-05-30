@@ -29,47 +29,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [awaitingInviteCode, setAwaitingInviteCode] = useState(false);
 
+  // Check DB whether this Google user has already claimed an invite code.
+  // Returns true if they have one (can proceed), false if they still need one.
+  const googleUserHasCode = async (userId: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from("invite_codes")
+      .select("id")
+      .eq("used_by", userId)
+      .maybeSingle();
+    return !!data;
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
 
         if (!session) {
           setAwaitingInviteCode(false);
+          setLoading(false);
           return;
         }
 
-        // Enforce invite code for new Google OAuth users
         if (session.user.app_metadata?.provider === "google") {
-          const createdAt = new Date(session.user.created_at);
-          const isNewUser = Date.now() - createdAt.getTime() < 120_000;
-          if (isNewUser) {
-            const pendingCodeId = localStorage.getItem("pendingInviteCode");
-            localStorage.removeItem("pendingInviteCode");
-            if (pendingCodeId) {
-              // Claim the pre-validated invite code via SECURITY DEFINER RPC
-              supabase
-                .rpc("claim_invite_code", {
-                  p_code_id: pendingCodeId,
-                  p_user_id: session.user.id,
-                })
-                .then(() => {});
-            } else {
-              // New Google user without invite code — block until they enter one
-              setAwaitingInviteCode(true);
-            }
+          // Check if there's a pre-validated code waiting from the signup flow
+          const pendingCodeId = localStorage.getItem("pendingInviteCode");
+          localStorage.removeItem("pendingInviteCode");
+
+          if (pendingCodeId) {
+            // Claim the pre-validated code, then let them in
+            await supabase.rpc("claim_invite_code", {
+              p_code_id: pendingCodeId,
+              p_user_id: session.user.id,
+            });
+            await generateUserInviteCodes(session.user.id);
+            setAwaitingInviteCode(false);
           } else {
-            localStorage.removeItem("pendingInviteCode");
+            // Check DB — if no claimed code exists, block until they enter one
+            const hasCode = await googleUserHasCode(session.user.id);
+            setAwaitingInviteCode(!hasCode);
           }
         }
+
+        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Also check on initial session load (returning user opening the app)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user?.app_metadata?.provider === "google") {
+        const hasCode = await googleUserHasCode(session.user.id);
+        if (!hasCode) setAwaitingInviteCode(true);
+      }
+
       setLoading(false);
     });
 
@@ -86,13 +102,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .single();
     if (error || !data || !data.is_active || data.used_by) return false;
     if (data.expires_at && new Date(data.expires_at) < new Date()) return false;
-    // Use SECURITY DEFINER RPC to bypass RLS (same as email signup flow)
+    // Use SECURITY DEFINER RPC to bypass RLS
     const { error: rpcError } = await supabase.rpc("claim_invite_code", {
       p_code_id: data.id,
       p_user_id: user.id,
     });
     if (rpcError) return false;
-    // Give the new user their 2 invite codes
     await generateUserInviteCodes(user.id);
     setAwaitingInviteCode(false);
     return true;

@@ -22,6 +22,7 @@ export interface Variety {
   seed_origin: string | null;
   personal_experience: string | null;
   difficulty: string | null;
+  link_url: string | null;
   info_score: number;
   info_ratings_count: number;
   created_at: string;
@@ -226,6 +227,7 @@ export const updateVariety = async (
     seed_origin?: string;
     location?: string;
     years_cultivated?: number;
+    link_url?: string;
     image_url?: string;
     image_url_2?: string;
     image_url_3?: string;
@@ -258,6 +260,7 @@ export const insertVariety = async (variety: {
   seed_origin?: string;
   personal_experience?: string;
   difficulty?: string;
+  link_url?: string;
   image_url?: string;
   image_url_2?: string;
   image_url_3?: string;

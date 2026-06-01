@@ -185,6 +185,7 @@ const AddVarietyForm = ({
   const [yearsCultivated, setYearsCultivated] = useState("");
   const [seedOrigin, setSeedOrigin] = useState("");
   const [personalExperience, setPersonalExperience] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Refs must be unconditional
@@ -232,6 +233,7 @@ const AddVarietyForm = ({
       years_cultivated: yearsCultivated ? parseInt(yearsCultivated) : undefined,
       seed_origin: seedOrigin || undefined,
       personal_experience: personalExperience || undefined,
+      link_url: linkUrl || undefined,
       difficulty: difficulty || undefined,
       tags: tags.length ? tags : undefined,
       image_url: urls[0],
@@ -410,6 +412,16 @@ const AddVarietyForm = ({
           className="mt-1 font-body resize-none" rows={4} />
       </div>
 
+      <div>
+        <Label className="font-body text-sm">{lang === "en" ? "Website or shop link (optional)" : "Link a tu web o tienda (opcional)"}</Label>
+        <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
+          placeholder="https://misemillas.cl"
+          type="url" className="mt-1 font-body" />
+        <p className="text-[10px] text-muted-foreground font-body mt-1">
+          {lang === "en" ? "Add a link if you sell this variety or want to share more info." : "Agrega un link si vendes esta variedad o quieres compartir más información."}
+        </p>
+      </div>
+
       <div className="flex gap-2 pt-1">
         <Button variant="outline" className="flex-1 font-body" onClick={() => setStep(2)}>{lang === "en" ? "← Back" : "← Atrás"}</Button>
         <Button variant="hero" className="flex-1 font-body" onClick={handleSave} disabled={saving}>
@@ -524,6 +536,7 @@ const EditVarietyForm = ({
   const [sizeWeight, setSizeWeight] = useState(variety.size_weight || "");
   const [difficulty, setDifficulty] = useState(variety.difficulty || "");
   const [personalExperience, setPersonalExperience] = useState(variety.personal_experience || "");
+  const [linkUrl, setLinkUrl] = useState(variety.link_url || "");
   const [photos, setPhotos] = useState<(File | null)[]>([null, null, null]);
   const [previews, setPreviews] = useState<(string | null)[]>([
     variety.image_url || null,
@@ -567,6 +580,7 @@ const EditVarietyForm = ({
       size_weight: sizeWeight || undefined,
       difficulty: difficulty || undefined,
       personal_experience: personalExperience || undefined,
+      link_url: linkUrl || undefined,
       image_url: urls[0] || undefined,
       image_url_2: urls[1] || undefined,
       image_url_3: urls[2] || undefined,
@@ -658,6 +672,13 @@ const EditVarietyForm = ({
         <Label className="font-body text-sm">{lang === "en" ? "Personal experience" : "Experiencia personal"}</Label>
         <Textarea value={personalExperience} onChange={(e) => setPersonalExperience(e.target.value)}
           className="mt-1 font-body resize-none" rows={3} />
+      </div>
+
+      {/* Link */}
+      <div>
+        <Label className="font-body text-sm">{lang === "en" ? "Website or shop link" : "Link a tu web o tienda"}</Label>
+        <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
+          placeholder="https://misemillas.cl" type="url" className="mt-1 font-body" />
       </div>
 
       <div className="flex gap-2 pt-1">
@@ -786,6 +807,20 @@ const VarietyDetail = ({
             &ldquo;{currentVariety.personal_experience}&rdquo;
           </p>
         </div>
+      )}
+
+      {currentVariety.link_url && (
+        <a
+          href={currentVariety.link_url.startsWith("http") ? currentVariety.link_url : `https://${currentVariety.link_url}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+        >
+          <ExternalLink className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-sm font-body text-primary font-medium truncate">
+            {currentVariety.link_url.replace(/^https?:\/\//, "")}
+          </span>
+        </a>
       )}
 
       {currentVariety.description && (

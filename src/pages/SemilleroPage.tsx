@@ -738,7 +738,7 @@ const VarietyDetail = ({
             )}
           </div>
           <p className="text-sm text-muted-foreground font-body italic">
-            {lang === "en" ? plant.name_en : plant.name} · {plant.scientificName}
+            {lang === "en" ? plant.name_en : plant.name} · {plant.scientificNameDisplay ?? plant.scientificName}
           </p>
           {currentVariety.info_ratings_count > 0 && (
             <div className="flex items-center gap-1 mt-1">
@@ -1118,7 +1118,7 @@ const PlantCard = ({
         <span className="text-2xl w-8 shrink-0">{plant.emoji}</span>
         <div className="flex-1 min-w-0">
           <p className="font-display font-bold">{displayPlantName}</p>
-          <p className="text-xs text-muted-foreground font-body italic">{plant.scientificName}</p>
+          <p className="text-xs text-muted-foreground font-body italic">{plant.scientificNameDisplay ?? plant.scientificName}</p>
         </div>
         <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
       </button>
@@ -1289,7 +1289,7 @@ const SemilleroPage = () => {
       .from("plant_varieties")
       .select("id, name, plant_scientific_name, image_url")
       .order("created_at", { ascending: false })
-      .limit(10)
+      .limit(6)
       .then(({ data }: { data: Variety[] | null }) => setRecentVarieties(data || []));
   }, []);
 
@@ -1454,20 +1454,20 @@ const SemilleroPage = () => {
                 )}
               </div>
             {recentVarieties.length > 0 ? (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {recentVarieties.map((v) => {
                     const plant = plants.find((p) => p.scientificName === v.plant_scientific_name);
                     return (
                       <button
                         key={v.id}
                         onClick={() => handleStripClick(v.id, v.plant_scientific_name)}
-                        className="shrink-0 w-28 bg-card rounded-xl border border-border overflow-hidden text-left hover:border-primary/60 transition-colors"
+                        className="bg-card rounded-xl border border-border overflow-hidden text-left hover:border-primary/60 transition-colors w-full"
                       >
-                        <div className="h-16 bg-muted overflow-hidden flex items-center justify-center">
+                        <div className="h-20 bg-muted overflow-hidden flex items-center justify-center">
                           {v.image_url ? (
                             <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-2xl">{(plant as any)?.emoji ?? "🌱"}</span>
+                            <span className="text-3xl">{(plant as any)?.emoji ?? "🌱"}</span>
                           )}
                         </div>
                         <div className="p-2">
@@ -1811,7 +1811,7 @@ const SemilleroPage = () => {
                     <span className="text-xl">{(p as any).emoji ?? "🌱"}</span>
                     <div>
                       <p className="text-sm font-body font-medium">{lang === "en" ? p.name_en : p.name}</p>
-                      <p className="text-[10px] text-muted-foreground font-body italic">{p.scientificName}</p>
+                      <p className="text-[10px] text-muted-foreground font-body italic">{(p as any).scientificNameDisplay ?? p.scientificName}</p>
                     </div>
                   </button>
                 ))}

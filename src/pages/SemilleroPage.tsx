@@ -1255,6 +1255,21 @@ const SemilleroPage = () => {
 
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Huertero/a";
 
+  // Add variety from top CTA
+  const [showAddFromTop, setShowAddFromTop] = useState(false);
+  const [addPlantSearch, setAddPlantSearch] = useState("");
+  const [selectedPlantForAdd, setSelectedPlantForAdd] = useState<Plant | null>(null);
+
+  const filteredPlantsForAdd = useMemo(() => {
+    const q = addPlantSearch.toLowerCase().trim();
+    if (!q) return plants.slice(0, 20);
+    return plants.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.name_en.toLowerCase().includes(q)
+    ).slice(0, 15);
+  }, [addPlantSearch]);
+
   // Recent community varieties for the featured strip
   const [recentVarieties, setRecentVarieties] = useState<Variety[]>([]);
   useEffect(() => {
@@ -1410,12 +1425,23 @@ const SemilleroPage = () => {
                 : "Explora el catálogo, descubre variedades de la comunidad y agrega tu experiencia de cultivo."}
             </p>
 
-            {/* ── Variedades destacadas ── */}
-            {recentVarieties.length > 0 && (
-              <div className="mb-5">
-                <p className="text-[11px] font-body font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+            {/* ── Variedades destacadas + CTA ── */}
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-body font-semibold text-muted-foreground uppercase tracking-widest">
                   {lang === "en" ? "Community varieties" : "Variedades de la comunidad"}
                 </p>
+                {user && (
+                  <button
+                    onClick={() => { setSelectedPlantForAdd(null); setAddPlantSearch(""); setShowAddFromTop(true); }}
+                    className="flex items-center gap-1 text-xs text-primary font-body font-medium hover:underline"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {lang === "en" ? "Add variety" : "Agregar variedad"}
+                  </button>
+                )}
+              </div>
+            {recentVarieties.length > 0 ? (
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {recentVarieties.map((v) => {
                     const plant = plants.find((p) => p.scientificName === v.plant_scientific_name);
@@ -1446,8 +1472,12 @@ const SemilleroPage = () => {
                     );
                   })}
                 </div>
-              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground font-body py-2">
+                {lang === "en" ? "No varieties yet — be the first!" : "Aún no hay variedades — ¡sé la primera!"}
+              </p>
             )}
+            </div>
 
             <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
               {activeCategories.map((c) => (
@@ -1735,6 +1765,80 @@ const SemilleroPage = () => {
                 )}
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog: Agregar variedad desde el top ── */}
+      <Dialog open={showAddFromTop} onOpenChange={(o) => { setShowAddFromTop(o); if (!o) { setSelectedPlantForAdd(null); setAddPlantSearch(""); } }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {!selectedPlantForAdd ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display">
+                  {lang === "en" ? "Which plant?" : "¿Qué planta?"}
+                </DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground font-body -mt-2 mb-3">
+                {lang === "en" ? "Search and select the plant you want to add a variety for." : "Busca y selecciona la planta de la que quieres agregar una variedad."}
+              </p>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  autoFocus
+                  placeholder={lang === "en" ? "Search plant..." : "Buscar planta..."}
+                  value={addPlantSearch}
+                  onChange={(e) => setAddPlantSearch(e.target.value)}
+                  className="pl-10 font-body"
+                />
+              </div>
+              <div className="space-y-1 max-h-72 overflow-y-auto">
+                {filteredPlantsForAdd.map((p) => (
+                  <button
+                    key={p.scientificName}
+                    onClick={() => setSelectedPlantForAdd(p)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
+                  >
+                    <span className="text-xl">{(p as any).emoji ?? "🌱"}</span>
+                    <div>
+                      <p className="text-sm font-body font-medium">{lang === "en" ? p.name_en : p.name}</p>
+                      <p className="text-[10px] text-muted-foreground font-body italic">{p.scientificName}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display flex items-center gap-2">
+                  <button onClick={() => setSelectedPlantForAdd(null)} className="text-muted-foreground hover:text-foreground">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  {lang === "en" ? `Add variety of ${selectedPlantForAdd.name_en}` : `Agregar variedad de ${selectedPlantForAdd.name}`}
+                </DialogTitle>
+              </DialogHeader>
+              <AddVarietyForm
+                plant={selectedPlantForAdd}
+                userId={user!.id}
+                lang={lang}
+                onClose={() => { setShowAddFromTop(false); setSelectedPlantForAdd(null); setAddPlantSearch(""); }}
+                onSaved={() => {
+                  setShowAddFromTop(false);
+                  setSelectedPlantForAdd(null);
+                  setAddPlantSearch("");
+                  // Refresh recent varieties
+                  (supabase as any)
+                    .from("plant_varieties")
+                    .select("id, name, plant_scientific_name, image_url")
+                    .order("created_at", { ascending: false })
+                    .limit(10)
+                    .then(({ data }: { data: Variety[] | null }) => setRecentVarieties(data || []));
+                  setCategory("all");
+                  setExpandedName(selectedPlantForAdd.scientificName);
+                }}
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>

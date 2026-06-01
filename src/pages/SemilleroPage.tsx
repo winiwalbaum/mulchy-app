@@ -1284,12 +1284,12 @@ const SemilleroPage = () => {
 
   // Recent community varieties for the featured strip
   const [recentVarieties, setRecentVarieties] = useState<Variety[]>([]);
+  const [showAllVarieties, setShowAllVarieties] = useState(false);
   useEffect(() => {
     (supabase as any)
       .from("plant_varieties")
       .select("id, name, plant_scientific_name, image_url, image_url_2, image_url_3")
       .order("created_at", { ascending: false })
-      .limit(6)
       .then(({ data }: { data: Variety[] | null }) => setRecentVarieties(data || []));
   }, []);
 
@@ -1454,8 +1454,9 @@ const SemilleroPage = () => {
                 )}
               </div>
             {recentVarieties.length > 0 ? (
+              <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {recentVarieties.map((v) => {
+                  {(showAllVarieties ? recentVarieties : recentVarieties.slice(0, 6)).map((v) => {
                     const plant = plants.find((p) => p.scientificName === v.plant_scientific_name);
                     return (
                       <button
@@ -1480,6 +1481,17 @@ const SemilleroPage = () => {
                     );
                   })}
                 </div>
+                {recentVarieties.length > 6 && (
+                  <button
+                    onClick={() => setShowAllVarieties((v) => !v)}
+                    className="mt-2 w-full text-xs text-primary font-body font-medium py-2 rounded-lg hover:bg-primary/5 transition-colors"
+                  >
+                    {showAllVarieties
+                      ? (lang === "en" ? "Show less ↑" : "Ver menos ↑")
+                      : (lang === "en" ? `See all (${recentVarieties.length}) ↓` : `Ver todas (${recentVarieties.length}) ↓`)}
+                  </button>
+                )}
+              </>
             ) : (
               <p className="text-xs text-muted-foreground font-body py-2">
                 {lang === "en" ? "No varieties yet — be the first!" : "Aún no hay variedades — ¡sé la primera!"}

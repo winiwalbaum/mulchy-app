@@ -1,0 +1,24 @@
+{
+  "name": "Mulchii",
+  "short_name": "Mulchii",
+  "description": "Tu comunidad huertera — semillas, variedades y experiencias compartidas",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#5C8A3C",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

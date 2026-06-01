@@ -23,6 +23,7 @@ import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const AppLayout = () => {
     <>
       <AppRoutes />
       {showNav && <BottomNav />}
+      <PWAInstallBanner />
     </>
   );
 };

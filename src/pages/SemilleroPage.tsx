@@ -1255,6 +1255,18 @@ const SemilleroPage = () => {
 
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Huertero/a";
 
+  // Click on featured variety strip → open that variety's detail
+  const [stripVarietyId, setStripVarietyId] = useState<string | null>(null);
+  const [stripPlantName, setStripPlantName] = useState<string | null>(null);
+
+  const handleStripClick = (varietyId: string, plantScientificName: string) => {
+    setCategory("all");
+    setSearch("");
+    setExpandedName(plantScientificName);
+    setStripPlantName(plantScientificName);
+    setStripVarietyId(varietyId);
+  };
+
   // Add variety from top CTA
   const [showAddFromTop, setShowAddFromTop] = useState(false);
   const [addPlantSearch, setAddPlantSearch] = useState("");
@@ -1448,11 +1460,7 @@ const SemilleroPage = () => {
                     return (
                       <button
                         key={v.id}
-                        onClick={() => {
-                          setCategory("all");
-                          setSearch("");
-                          setExpandedName(v.plant_scientific_name);
-                        }}
+                        onClick={() => handleStripClick(v.id, v.plant_scientific_name)}
                         className="shrink-0 w-28 bg-card rounded-xl border border-border overflow-hidden text-left hover:border-primary/60 transition-colors"
                       >
                         <div className="h-16 bg-muted overflow-hidden flex items-center justify-center">
@@ -1515,6 +1523,7 @@ const SemilleroPage = () => {
                     userId={user?.id ?? null}
                     displayName={displayName}
                     autoOpenVarietyId={
+                      stripPlantName === plant.scientificName ? stripVarietyId :
                       targetPlantName === plant.scientificName ? targetVarietyId : null
                     }
                   />

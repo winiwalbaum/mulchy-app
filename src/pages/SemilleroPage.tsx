@@ -636,6 +636,13 @@ const EditVarietyForm = ({
         <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 font-body" />
       </div>
 
+      {/* Link */}
+      <div>
+        <Label className="font-body text-sm">{lang === "en" ? "Website or shop link" : "Link a tu web o tienda"}</Label>
+        <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
+          placeholder="https://misemillas.cl" type="url" className="mt-1 font-body" />
+      </div>
+
       {/* Color + Forma */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -672,13 +679,6 @@ const EditVarietyForm = ({
         <Label className="font-body text-sm">{lang === "en" ? "Personal experience" : "Experiencia personal"}</Label>
         <Textarea value={personalExperience} onChange={(e) => setPersonalExperience(e.target.value)}
           className="mt-1 font-body resize-none" rows={3} />
-      </div>
-
-      {/* Link */}
-      <div>
-        <Label className="font-body text-sm">{lang === "en" ? "Website or shop link" : "Link a tu web o tienda"}</Label>
-        <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
-          placeholder="https://misemillas.cl" type="url" className="mt-1 font-body" />
       </div>
 
       <div className="flex gap-2 pt-1">

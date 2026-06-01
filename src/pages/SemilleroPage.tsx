@@ -1287,7 +1287,7 @@ const SemilleroPage = () => {
   useEffect(() => {
     (supabase as any)
       .from("plant_varieties")
-      .select("id, name, plant_scientific_name, image_url")
+      .select("id, name, plant_scientific_name, image_url, image_url_2, image_url_3")
       .order("created_at", { ascending: false })
       .limit(6)
       .then(({ data }: { data: Variety[] | null }) => setRecentVarieties(data || []));
@@ -1464,8 +1464,8 @@ const SemilleroPage = () => {
                         className="bg-card rounded-xl border border-border overflow-hidden text-left hover:border-primary/60 transition-colors w-full"
                       >
                         <div className="h-20 bg-muted overflow-hidden flex items-center justify-center">
-                          {v.image_url ? (
-                            <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />
+                          {(v.image_url || v.image_url_2 || v.image_url_3) ? (
+                            <img src={v.image_url || v.image_url_2 || v.image_url_3} alt={v.name} className="w-full h-full object-cover" />
                           ) : (
                             <span className="text-3xl">{(plant as any)?.emoji ?? "🌱"}</span>
                           )}

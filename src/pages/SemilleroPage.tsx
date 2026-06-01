@@ -23,6 +23,7 @@ import { plants, type Plant, type PlantCategory } from "@/data/plants";
 import { plantExtra, formatMonths } from "@/data/plantExtra";
 import { useNativePlants, categoryEmoji, categoryLabels, type NativePlant } from "@/hooks/useNativePlants";
 import { useNativeHerbario } from "@/hooks/useNativeHerbario";
+import { useHerbario } from "@/hooks/useHerbario";
 import {
   useVarieties, useVarietyGrows, useMyGrow, useMyRating,
   upsertGrow, insertVariety, updateVariety, upsertRating, uploadVarietyPhoto,
@@ -709,6 +710,8 @@ const VarietyDetail = ({
 
   const isOwner = userId === currentVariety.created_by;
   const photos = [currentVariety.image_url, currentVariety.image_url_2, currentVariety.image_url_3].filter(Boolean) as string[];
+  const { savedIds, toggle: toggleHerbario } = useHerbario();
+  const isSaved = savedIds.has(currentVariety.id);
 
   const detailRows = [
     { key: "color",    label: { es: "Color", en: "Color" },             value: variety.color },
@@ -748,6 +751,22 @@ const VarietyDetail = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-display font-bold flex-1">{currentVariety.name}</h2>
+            {userId && (
+              <button
+                onClick={() => toggleHerbario(currentVariety.id)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-body transition-colors border ${
+                  isSaved
+                    ? "bg-primary/10 text-primary border-primary/30"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/5 border-transparent hover:border-primary/20"
+                }`}
+                title={isSaved ? (lang === "en" ? "Remove from my garden" : "Quitar de mi huerto") : (lang === "en" ? "Save to my garden" : "Guardar en mi huerto")}
+              >
+                {isSaved
+                  ? <><BookmarkCheck className="w-3.5 h-3.5" /> {lang === "en" ? "Saved" : "Guardada"}</>
+                  : <><Bookmark className="w-3.5 h-3.5" /> {lang === "en" ? "Save" : "Guardar"}</>
+                }
+              </button>
+            )}
             {isOwner && (
               <button
                 onClick={() => setShowEditForm(true)}

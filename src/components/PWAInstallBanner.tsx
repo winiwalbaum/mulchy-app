@@ -2,42 +2,21 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share, MoreVertical } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 const STORAGE_KEY = "pwa_banner_dismissed";
-
-const isIOS = () =>
-  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-const isInStandalone = () =>
-  window.matchMedia("(display-mode: standalone)").matches ||
-  (window.navigator as any).standalone === true;
 
 const PWAInstallBanner = () => {
   const { lang } = useLanguage();
   const [visible, setVisible] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const { isStandalone, isIOS: ios, canInstall, install } = usePWAInstall();
 
   useEffect(() => {
-    // Never show if already installed or previously dismissed
-    if (isInStandalone()) return;
+    if (isStandalone) return;
     if (localStorage.getItem(STORAGE_KEY)) return;
-
-    // Catch Android/Chrome native install prompt
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-
-    // Show banner after 5 seconds
     const timer = setTimeout(() => setVisible(true), 5000);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-      clearTimeout(timer);
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [isStandalone]);
 
   const dismiss = () => {
     setVisible(false);
@@ -45,17 +24,9 @@ const PWAInstallBanner = () => {
   };
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        dismiss();
-      }
-      setDeferredPrompt(null);
-    }
+    const accepted = await install();
+    if (accepted) dismiss();
   };
-
-  const ios = isIOS();
 
   return (
     <AnimatePresence>
@@ -82,7 +53,7 @@ const PWAInstallBanner = () => {
                     : <>Toca <Share className="inline w-3.5 h-3.5 align-text-bottom" /> y luego <strong>"Añadir a pantalla de inicio"</strong></>
                   }
                 </p>
-              ) : deferredPrompt ? (
+              ) : canInstall ? (
                 <button
                   onClick={handleInstall}
                   className="mt-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-body font-semibold rounded-lg"

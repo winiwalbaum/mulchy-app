@@ -4,11 +4,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
-import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2, Ticket, Copy, Check } from "lucide-react";
+import { LogOut, MapPin, Thermometer, Wind, Navigation, Globe, Camera, Loader2, Ticket, Copy, Check, Smartphone, Share, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import LocationPicker from "@/components/LocationPicker";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -21,6 +22,7 @@ const ProfilePage = () => {
   const p = t.profile as any;
   const [inviteCodes, setInviteCodes] = useState<{ code: string; used_by: string | null }[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const { isStandalone, isIOS, canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     if (!user) return;
@@ -297,6 +299,51 @@ const ProfilePage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Install app */}
+        {!isStandalone && (
+          <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3">
+            <h3 className="font-semibold font-display flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-primary" />
+              {lang === "en" ? "Install app" : "Instalar app"}
+            </h3>
+            {canInstall ? (
+              <>
+                <p className="text-sm text-muted-foreground font-body">
+                  {lang === "en"
+                    ? "Add Mulchii to your home screen for quick access."
+                    : "Agrega Mulchii a tu pantalla de inicio para acceso rápido."}
+                </p>
+                <Button
+                  className="w-full"
+                  onClick={async () => {
+                    const accepted = await install();
+                    if (accepted) toast.success(lang === "en" ? "App installed!" : "¡App instalada!");
+                  }}
+                >
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  {lang === "en" ? "Add to home screen" : "Agregar a inicio"}
+                </Button>
+              </>
+            ) : isIOS ? (
+              <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                {lang === "en" ? (
+                  <>Tap <Share className="inline w-4 h-4 align-text-bottom mx-0.5" /> in Safari, then tap <strong className="text-foreground">"Add to Home Screen"</strong>.</>
+                ) : (
+                  <>Toca <Share className="inline w-4 h-4 align-text-bottom mx-0.5" /> en Safari, luego <strong className="text-foreground">"Añadir a pantalla de inicio"</strong>.</>
+                )}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                {lang === "en" ? (
+                  <>Tap <MoreVertical className="inline w-4 h-4 align-text-bottom mx-0.5" /> in your browser menu, then <strong className="text-foreground">"Add to Home Screen"</strong>.</>
+                ) : (
+                  <>Toca <MoreVertical className="inline w-4 h-4 align-text-bottom mx-0.5" /> en el menú de tu navegador, luego <strong className="text-foreground">"Añadir a pantalla de inicio"</strong>.</>
+                )}
+              </p>
+            )}
           </div>
         )}
 

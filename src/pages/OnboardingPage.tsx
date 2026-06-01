@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -15,9 +14,7 @@ import LocationPicker from "@/components/LocationPicker";
 
 const OnboardingPage = () => {
   const { user } = useAuth();
-  const { refetch: refetchProfile } = useProfile();
   const { t, lang, setLang } = useLanguage();
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -87,9 +84,12 @@ const OnboardingPage = () => {
 
       if (profileError) throw profileError;
 
-      await refetchProfile();
       toast.success(ob.gardenReady as string);
-      navigate("/");
+      // Use full reload so ProfileContext re-fetches the updated profile
+      // (with onboarding_completed: true) before OnboardingGuard runs.
+      // A simple navigate("/") has a race where the guard still sees the
+      // old cached profile and loops back to /onboarding.
+      window.location.replace("/dashboard");
     } catch (error: any) {
       toast.error(error.message || (ob.saveError as string));
     } finally {

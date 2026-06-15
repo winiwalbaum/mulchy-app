@@ -77,7 +77,7 @@ const ProfilePage = () => {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       toast.error(p.avatarFileTooLarge);
       return;
     }
@@ -166,6 +166,56 @@ const ProfilePage = () => {
           <p className="text-sm text-muted-foreground font-body mt-1">{user?.email}</p>
         </div>
 
+        {/* Invite codes — top position for discoverability */}
+        {inviteCodes.length > 0 && (
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold font-display flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-primary" />
+                {lang === "en" ? "Invite a friend" : "Invita a alguien"}
+              </h3>
+              <span className="text-xs text-muted-foreground font-body">
+                {inviteCodes.filter(c => !c.used_by).length} {lang === "en" ? "available" : "disponibles"}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground font-body">
+              {lang === "en"
+                ? "Share your link so friends can join Mulchii."
+                : "Comparte tu link para que tus amigos puedan entrar a Mulchii."}
+            </p>
+            <div className="space-y-2">
+              {inviteCodes.map(({ code, used_by }) => (
+                <div
+                  key={code}
+                  className={`p-3 rounded-xl border bg-card ${used_by ? "opacity-40" : "border-primary/30"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold tracking-widest text-sm">{code}</span>
+                    {used_by ? (
+                      <span className="text-xs text-muted-foreground font-body">{lang === "en" ? "Used ✓" : "Usado ✓"}</span>
+                    ) : (
+                      <button
+                        onClick={() => handleShareCode(code)}
+                        className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-lg font-body font-semibold"
+                      >
+                        {copiedCode === code
+                          ? <><Check className="w-3 h-3" /> {lang === "en" ? "Copied!" : "¡Copiado!"}</>
+                          : <><Share className="w-3 h-3" /> {lang === "en" ? "Share" : "Compartir"}</>
+                        }
+                      </button>
+                    )}
+                  </div>
+                  {!used_by && (
+                    <p className="text-[10px] text-muted-foreground font-mono mt-1 truncate">
+                      mulchii.com?invite={code}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3">
           <h3 className="font-semibold font-display flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
@@ -252,55 +302,6 @@ const ProfilePage = () => {
             ))}
           </div>
         </div>
-
-        {/* Invite codes */}
-        {inviteCodes.length > 0 && (
-          <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3">
-            <h3 className="font-semibold font-display flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-primary" />
-              {lang === "en" ? "Your invite codes" : "Tus códigos de invitación"}
-            </h3>
-            <p className="text-xs text-muted-foreground font-body">
-              {lang === "en"
-                ? "Share these with people you want to invite to Mulchii."
-                : "Comparte estos códigos con personas que quieras invitar a Mulchii."}
-            </p>
-            <div className="space-y-2">
-              {inviteCodes.map(({ code, used_by }) => (
-                <div
-                  key={code}
-                  className={`p-3 rounded-xl border ${
-                    used_by ? "bg-muted border-muted opacity-50" : "bg-background border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold tracking-widest text-sm">{code}</span>
-                    {used_by ? (
-                      <span className="text-xs text-muted-foreground font-body">
-                        {lang === "en" ? "Used ✓" : "Usado ✓"}
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleShareCode(code)}
-                        className="flex items-center gap-1 text-xs text-primary font-body font-medium hover:underline"
-                      >
-                        {copiedCode === code
-                          ? <><Check className="w-3 h-3" /> {lang === "en" ? "Copied!" : "¡Copiado!"}</>
-                          : <><Copy className="w-3 h-3" /> {lang === "en" ? "Share link" : "Compartir link"}</>
-                        }
-                      </button>
-                    )}
-                  </div>
-                  {!used_by && (
-                    <p className="text-[10px] text-muted-foreground font-mono mt-1 truncate">
-                      mulchii.com?invite={code}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Install app */}
         {!isStandalone && (

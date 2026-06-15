@@ -38,7 +38,7 @@ const en: Translations = {
     welcomeBackToast: "Welcome back!",
     authError: "Authentication error",
     inviteCode: "Invitation code",
-    inviteOnlyNotice: "Mulchii is an invite-only community. You need a code to join.",
+    inviteOnlyNotice: "Mulchii is invite-only. Ask a Mulchii user to share their invite link with you.",
     invalidInviteCode: "Invalid or already used invitation code.",
   },
 

@@ -388,7 +388,7 @@ const NewPostDialog = ({
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       toast.error(c.imageTooLarge);
       return;
     }

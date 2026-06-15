@@ -39,7 +39,7 @@ const es: DeepStringRecord = {
     welcomeBackToast: "¡Bienvenido de vuelta!",
     authError: "Error de autenticación",
     inviteCode: "Código de invitación",
-    inviteOnlyNotice: "Mulchii es una comunidad por invitación. Necesitas un código para unirte.",
+    inviteOnlyNotice: "Mulchii es solo por invitación. Pídele a alguien que ya usa Mulchii que comparta su link contigo.",
     invalidInviteCode: "Código de invitación inválido o ya utilizado.",
   },
 

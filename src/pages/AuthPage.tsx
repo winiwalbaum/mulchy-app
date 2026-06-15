@@ -128,8 +128,10 @@ const AuthPage = () => {
             <div className="flex justify-center mb-4">
               <img src="/logo.png" className="w-20 h-20 object-contain" alt="MULCHII" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">🌱 {a.inviteCode}</h1>
-            <p className="text-muted-foreground font-body text-sm">Ingresa el código que recibiste en tu email de invitación.</p>
+            <h1 className="text-2xl font-bold mb-2">🌱 Mulchii es por invitación</h1>
+            <p className="text-muted-foreground font-body text-sm">
+              Pídele a alguien que ya usa Mulchii que comparta su link de invitación contigo. El código está en su perfil.
+            </p>
           </div>
           <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
             <form onSubmit={handleClaimGoogleInvite} className="space-y-4">

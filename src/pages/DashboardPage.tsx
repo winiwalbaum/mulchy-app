@@ -4,8 +4,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Leaf, ChevronLeft, ChevronRight,
-  CalendarPlus, Download, ExternalLink, Moon, ChevronDown, ChevronUp, Trash2,
+  CalendarPlus, Download, ExternalLink, Moon, ChevronDown, ChevronUp, Trash2, UserPlus,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
@@ -351,6 +352,13 @@ const DashboardPage = () => {
         <div className="container flex items-center gap-3 py-4">
           <img src="/logo.png" className="w-7 h-7 object-contain" alt="Mulchii" />
           <h1 className="text-xl font-semibold">{d.title}</h1>
+          <Link
+            to="/perfil"
+            className="ml-auto flex items-center gap-1.5 text-xs font-body font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            {lang === "en" ? "Invite" : "Invitar"}
+          </Link>
         </div>
       </header>
 

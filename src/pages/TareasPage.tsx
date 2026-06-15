@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { gardenTasks, seasonConfig, taskCategories, type Season, type GardenTask } from "@/data/gardenTasks";
-import { ExternalLink, Leaf, ArrowLeft } from "lucide-react";
+import { ExternalLink, ArrowLeft, CalendarArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import LunarCalendarWidget from "@/components/LunarCalendarWidget";
@@ -72,6 +73,52 @@ const TareasPage = () => {
     setActiveMonth("todos");
   };
 
+  const exportToCalendar = () => {
+    const year = new Date().getFullYear();
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Mulchii//Garden Tasks//ES",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      `X-WR-CALNAME:Mulchii — ${lang === "en" ? "Garden Tasks" : "Tareas de Huerta"}`,
+    ];
+    filtered.forEach((task) => {
+      const title = l(task.title, task.title_en);
+      const desc = l(task.description, task.description_en).replace(/\n/g, "\\n");
+      const months = activeMonth !== "todos"
+        ? task.months.filter((m) => m === activeMonth)
+        : task.months;
+      months.forEach((month) => {
+        const taskYear = month < new Date().getMonth() + 1 ? year + 1 : year;
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const dtStart = `${taskYear}${pad(month)}01`;
+        const dtEnd   = `${taskYear}${pad(month)}02`;
+        lines.push(
+          "BEGIN:VEVENT",
+          `DTSTART;VALUE=DATE:${dtStart}`,
+          `DTEND;VALUE=DATE:${dtEnd}`,
+          `SUMMARY:${task.emoji} ${title}`,
+          `DESCRIPTION:${desc}`,
+          `CATEGORIES:HUERTA`,
+          `UID:mulchii-${task.id}-${month}-${taskYear}@mulchii.com`,
+          "END:VEVENT",
+        );
+      });
+    });
+    lines.push("END:VCALENDAR");
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mulchii-tareas.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(lang === "en" ? "Calendar file downloaded!" : "¡Archivo descargado! Ábrelo para importar.");
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20">
@@ -81,7 +128,17 @@ const TareasPage = () => {
           </Button>
           <img src="/logo.png" className="w-7 h-7 object-contain" alt="MULCHII" />
           <h1 className="text-xl font-semibold">{tr.title}</h1>
-          <span className="ml-auto text-xs text-muted-foreground font-body">{filtered.length} {d.tasks}</span>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-xs text-muted-foreground font-body">{filtered.length} {d.tasks}</span>
+            <button
+              onClick={exportToCalendar}
+              title={lang === "en" ? "Export to calendar" : "Exportar al calendario"}
+              className="flex items-center gap-1.5 text-xs font-body font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              <CalendarArrowDown className="w-4 h-4" />
+              <span className="hidden sm:inline">{lang === "en" ? "Export" : "Exportar"}</span>
+            </button>
+          </div>
         </div>
       </header>
 

@@ -11,6 +11,41 @@ import { MapPin, Thermometer, ChevronRight, ChevronLeft, Check, Loader2, Globe }
 import { toast } from "sonner";
 import LocationPicker from "@/components/LocationPicker";
 
+const FEATURES = (lang: "es" | "en") => [
+  {
+    emoji: "📓",
+    title: lang === "en" ? "Garden Journal" : "Bitácora",
+    desc: lang === "en"
+      ? "Log your crops day by day — photos, notes, and personalized tracking based on your climate and location."
+      : "Registra tus cultivos día a día — fotos, notas y seguimiento personalizado según tu clima y ubicación.",
+    color: "bg-green-50 border-green-100",
+  },
+  {
+    emoji: "🌱",
+    title: lang === "en" ? "Seed Library" : "Semillero",
+    desc: lang === "en"
+      ? "Discover varieties documented by the community. Add your own and share your growing experience."
+      : "Descubre variedades documentadas por la propia comunidad. Agrega las tuyas y comparte tu experiencia de cultivo.",
+    color: "bg-emerald-50 border-emerald-100",
+  },
+  {
+    emoji: "🤝",
+    title: lang === "en" ? "Community" : "Comunidad",
+    desc: lang === "en"
+      ? "Share photos and learnings with other gardeners. A living collective memory that grows with every user."
+      : "Comparte fotos y aprendizajes con otros huerteros. Una memoria colectiva viva que crece con cada usuario.",
+    color: "bg-teal-50 border-teal-100",
+  },
+  {
+    emoji: "📅",
+    title: lang === "en" ? "Garden Calendar" : "Tareas del mes",
+    desc: lang === "en"
+      ? "Export your monthly garden tasks to Google Calendar or iCal with one tap. Never forget when to sow, transplant or harvest."
+      : "Exporta las tareas de tu huerta a Google Calendar o iCal con un toque. Nunca olvides cuándo sembrar, trasplantar o cosechar.",
+    color: "bg-sky-50 border-sky-100",
+  },
+];
+
 
 const OnboardingPage = () => {
   const { user } = useAuth();
@@ -36,7 +71,9 @@ const OnboardingPage = () => {
   const [frostType, setFrostType] = useState("heladas_ocasionales");
 
 
-  const totalSteps = 4;
+  const [featureSlide, setFeatureSlide] = useState(0);
+
+  const totalSteps = 5;
   const ob = t.onboarding as any;
   const frostOpts = ob.frostOptions as { value: string; label: string; emoji: string; desc: string }[];
   const pronounOpts = ob.pronounOptions as string[];
@@ -57,6 +94,7 @@ const OnboardingPage = () => {
     switch (step) {
       case 0: return true; // language always selected
       case 1: return displayName.trim().length > 0;
+      case 4: return featureSlide === FEATURES(lang).length - 1;
       default: return true;
     }
   };
@@ -296,6 +334,67 @@ const OnboardingPage = () => {
                 </div>
               </motion.div>
             )}
+            {/* Step 4: Feature tour */}
+            {step === 4 && (() => {
+              const features = FEATURES(lang);
+              const f = features[featureSlide];
+              return (
+                <motion.div key="step-4" variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
+                  <h2 className="text-2xl font-bold font-display mb-1">
+                    {lang === "en" ? "What can you do?" : "¿Qué puedes hacer?"}
+                  </h2>
+                  <p className="text-muted-foreground font-body mb-6 text-sm">
+                    {lang === "en" ? "Explore the main features" : "Explora las funciones principales"}
+                  </p>
+
+                  <div className={`rounded-2xl border p-6 min-h-[200px] flex flex-col items-center justify-center text-center transition-colors ${f.color}`}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={featureSlide}
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex flex-col items-center"
+                      >
+                        <span className="text-6xl mb-4 select-none">{f.emoji}</span>
+                        <h3 className="font-display font-bold text-xl mb-2">{f.title}</h3>
+                        <p className="text-muted-foreground font-body text-sm leading-relaxed max-w-xs">{f.desc}</p>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Arrows + dots */}
+                  <div className="flex items-center justify-between mt-5">
+                    <button
+                      onClick={() => setFeatureSlide(s => Math.max(0, s - 1))}
+                      disabled={featureSlide === 0}
+                      className="w-10 h-10 rounded-full flex items-center justify-center border border-border bg-card disabled:opacity-30 hover:bg-muted transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    <div className="flex gap-2">
+                      {features.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setFeatureSlide(i)}
+                          className={`w-2 h-2 rounded-full transition-all ${i === featureSlide ? "bg-primary w-5" : "bg-muted-foreground/30"}`}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setFeatureSlide(s => Math.min(features.length - 1, s + 1))}
+                      disabled={featureSlide === features.length - 1}
+                      className="w-10 h-10 rounded-full flex items-center justify-center border border-border bg-card disabled:opacity-30 hover:bg-muted transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })()}
           </AnimatePresence>
         </div>
       </div>
@@ -311,7 +410,7 @@ const OnboardingPage = () => {
           )}
           {step < totalSteps - 1 ? (
             <Button variant="hero" size="lg" onClick={() => setStep((s) => s + 1)} disabled={!canProceed()} className="flex-1">
-              {(t.common as any).next}
+              {step === 4 - 1 ? (lang === "en" ? "See features" : "Ver funciones") : (t.common as any).next}
               <ChevronRight className="w-4 h-4" />
             </Button>
           ) : (
